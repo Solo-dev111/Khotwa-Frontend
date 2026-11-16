@@ -1,0 +1,177 @@
+<section class="categories-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">ADMIN / CATEGORIES</span>
+      <h1>{{ t('إدارة التصنيفات', 'Manage Categories') }}</h1>
+      <p>
+        {{
+          t(
+            'أضف التصنيفات التي سيستخدمها المدربون عند إنشاء الدورات.',
+            'Create and manage categories for courses.'
+          )
+        }}
+      </p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (message()) {
+    <div class="alert success">{{ message() }}</div>
+  }
+
+  <!-- ADD / EDIT FORM -->
+
+  <section class="panel">
+    <h2>
+      {{
+        editingId === null ? t('إضافة تصنيف', 'Add Category') : t('تعديل التصنيف', 'Edit Category')
+      }}
+    </h2>
+
+    <form (ngSubmit)="save()" #categoryForm="ngForm">
+      <div class="form-grid">
+        <div class="field">
+          <label for="name">
+            {{ t('اسم التصنيف', 'Category Name') }}
+          </label>
+
+          <input
+            id="name"
+            name="name"
+            type="text"
+            [(ngModel)]="name"
+            required
+            maxlength="100"
+            [placeholder]="t('مثلاً: برمجة', 'Example: Programming')"
+          />
+        </div>
+
+        <div class="field">
+          <label for="description">
+            {{ t('الوصف', 'Description') }}
+          </label>
+
+          <input
+            id="description"
+            name="description"
+            type="text"
+            [(ngModel)]="description"
+            maxlength="500"
+            [placeholder]="t('وصف مختصر', 'Short description')"
+          />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="primary-button" type="submit" [disabled]="categoryForm.invalid || saving()">
+          {{
+            saving()
+              ? t('جاري الحفظ...', 'Saving...')
+              : editingId === null
+                ? t('إضافة التصنيف', 'Add Category')
+                : t('حفظ التعديلات', 'Save Changes')
+          }}
+        </button>
+
+        @if (editingId !== null) {
+          <button type="button" class="secondary-button" (click)="cancelEdit()">
+            {{ t('إلغاء', 'Cancel') }}
+          </button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <!-- CATEGORIES TABLE -->
+
+  <section class="panel">
+    <div class="table-heading">
+      <div>
+        <h2>{{ t('التصنيفات الموجودة', 'Existing Categories') }}</h2>
+        <p>
+          {{ totalCount() }}
+          {{ t('تصنيف', 'categories') }}
+        </p>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="search"
+          name="search"
+          [(ngModel)]="search"
+          (keyup.enter)="searchNow()"
+          [placeholder]="t('ابحث عن تصنيف...', 'Search categories...')"
+        />
+
+        <button type="button" (click)="searchNow()">
+          {{ t('بحث', 'Search') }}
+        </button>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state">
+        {{ t('جاري تحميل التصنيفات...', 'Loading categories...') }}
+      </div>
+    } @else if (categories().length === 0) {
+      <div class="empty-state">
+        {{ t('لا توجد تصنيفات حالياً.', 'No categories found.') }}
+      </div>
+    } @else {
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>{{ t('التصنيف', 'Category') }}</th>
+              <th>{{ t('الوصف', 'Description') }}</th>
+              <th>{{ t('الإجراءات', 'Actions') }}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (category of categories(); track category.id) {
+              <tr>
+                <td>{{ category.id }}</td>
+                <td class="category-name">{{ category.name }}</td>
+                <td>{{ category.description || '—' }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button type="button" class="edit-button" (click)="edit(category)">
+                      {{ t('تعديل', 'Edit') }}
+                    </button>
+
+                    <button type="button" class="delete-button" (click)="remove(category)">
+                      {{ t('حذف', 'Delete') }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button type="button" [disabled]="pageNumber === 1" (click)="changePage(pageNumber - 1)">
+          {{ t('السابق', 'Previous') }}
+        </button>
+
+        <span> {{ pageNumber }} / {{ totalPages() }} </span>
+
+        <button
+          type="button"
+          [disabled]="pageNumber === totalPages()"
+          (click)="changePage(pageNumber + 1)"
+        >
+          {{ t('التالي', 'Next') }}
+        </button>
+      </div>
+    }
+  </section>
+</section>

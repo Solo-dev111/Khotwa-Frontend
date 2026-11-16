@@ -1,0 +1,283 @@
+<section class="users-page">
+  <!-- HEADER -->
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">ADMIN / USERS</span>
+
+      <h1>
+        {{ t('إدارة المستخدمين', 'User Management') }}
+      </h1>
+
+      <p>
+        {{
+          t(
+            'إدارة حسابات الطلاب والمدربين ومديري النظام.',
+            'Manage students, instructors and administrators.'
+          )
+        }}
+      </p>
+    </div>
+
+    @if (isAdmin()) {
+      <button type="button" class="primary-button" (click)="openCreate()">
+        + {{ t('مستخدم جديد', 'New User') }}
+      </button>
+    }
+  </header>
+
+  @if (!isAdmin()) {
+    <div class="empty-state">
+      {{
+        t('هذه الصفحة متاحة لمدير النظام فقط.', 'This page is available to administrators only.')
+      }}
+    </div>
+  } @else {
+    <!-- FEEDBACK -->
+    @if (error()) {
+      <div class="alert error">
+        {{ error() }}
+      </div>
+    }
+
+    @if (message()) {
+      <div class="alert success">
+        {{ message() }}
+      </div>
+    }
+
+    <!-- CREATE / EDIT FORM -->
+    @if (formOpen()) {
+      <section class="panel editor-panel">
+        <div class="panel-heading">
+          <h2>
+            {{
+              editingId === null
+                ? t('إنشاء حساب جديد', 'Create User')
+                : t('تعديل الحساب', 'Edit User')
+            }}
+          </h2>
+
+          <button type="button" class="close-button" (click)="closeForm()">✕</button>
+        </div>
+
+        <form #userForm="ngForm" (ngSubmit)="save()">
+          <div class="form-grid">
+            <div class="field">
+              <label for="fullName">
+                {{ t('الاسم الكامل', 'Full Name') }}
+              </label>
+
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                [(ngModel)]="form.fullName"
+                required
+                maxlength="150"
+              />
+            </div>
+
+            <div class="field">
+              <label for="email">
+                {{ t('البريد الإلكتروني', 'Email') }}
+              </label>
+
+              <input
+                id="email"
+                name="email"
+                type="email"
+                [(ngModel)]="form.email"
+                required
+                email
+                dir="ltr"
+              />
+            </div>
+
+            @if (editingId === null) {
+              <div class="field">
+                <label for="password">
+                  {{ t('كلمة المرور', 'Password') }}
+                </label>
+
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  [(ngModel)]="form.password"
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                />
+              </div>
+            }
+
+            <div class="field">
+              <label for="role">
+                {{ t('نوع الحساب', 'User Role') }}
+              </label>
+
+              <select id="role" name="role" [(ngModel)]="form.role">
+                @for (role of roles; track role) {
+                  <option [ngValue]="role">
+                    {{ roleName(role) }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-button" [disabled]="userForm.invalid || saving()">
+              {{ saving() ? t('جاري الحفظ...', 'Saving...') : t('حفظ', 'Save') }}
+            </button>
+
+            <button type="button" class="secondary-button" (click)="closeForm()">
+              {{ t('إلغاء', 'Cancel') }}
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    <!-- USERS LIST -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>
+            {{ t('الحسابات', 'Accounts') }}
+          </h2>
+
+          <p>
+            {{ totalCount() }}
+            {{ t('مستخدم', 'users') }}
+          </p>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters">
+        <input
+          type="search"
+          [(ngModel)]="search"
+          [placeholder]="t('ابحث بالاسم أو البريد...', 'Search name or email...')"
+          (keyup.enter)="applyFilters()"
+        />
+
+        <select [(ngModel)]="roleFilter">
+          <option value="">
+            {{ t('جميع الأدوار', 'All Roles') }}
+          </option>
+
+          @for (role of roles; track role) {
+            <option [ngValue]="role">
+              {{ roleName(role) }}
+            </option>
+          }
+        </select>
+
+        <button type="button" class="primary-button" (click)="applyFilters()">
+          {{ t('بحث', 'Search') }}
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          {{ t('جاري تحميل المستخدمين...', 'Loading users...') }}
+        </div>
+      } @else if (users().length === 0) {
+        <div class="empty-state">
+          {{ t('لا توجد حسابات مطابقة.', 'No matching users found.') }}
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>{{ t('المستخدم', 'User') }}</th>
+                <th>{{ t('الدور', 'Role') }}</th>
+                <th>{{ t('تاريخ الإنشاء', 'Created') }}</th>
+                <th>{{ t('الإجراءات', 'Actions') }}</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar">
+                        {{ user.fullName.charAt(0) }}
+                      </div>
+
+                      <div>
+                        <strong>{{ user.fullName }}</strong>
+                        <span>{{ user.email }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      class="role-tag"
+                      [class.instructor]="user.role === 'Instructor'"
+                      [class.admin]="user.role === 'Admin'"
+                    >
+                      {{ roleName(user.role) }}
+                    </span>
+                  </td>
+
+                  <td class="date-cell">
+                    {{ formatDate(user.createdAt) }}
+                  </td>
+
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="secondary-button" (click)="openEdit(user)">
+                        {{ t('تعديل', 'Edit') }}
+                      </button>
+
+                      <button
+                        type="button"
+                        class="delete-button"
+                        [disabled]="isSelf(user) || deletingId() !== null"
+                        (click)="remove(user)"
+                      >
+                        {{
+                          deletingId() === user.id
+                            ? t('جاري الحذف...', 'Deleting...')
+                            : t('حذف', 'Delete')
+                        }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button
+              type="button"
+              [disabled]="pageNumber === 1 || loading()"
+              (click)="changePage(pageNumber - 1)"
+            >
+              {{ t('السابق', 'Previous') }}
+            </button>
+
+            <span> {{ pageNumber }} / {{ totalPages() }} </span>
+
+            <button
+              type="button"
+              [disabled]="pageNumber >= totalPages() || loading()"
+              (click)="changePage(pageNumber + 1)"
+            >
+              {{ t('التالي', 'Next') }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+  }
+</section>

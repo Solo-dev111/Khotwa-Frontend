@@ -1,0 +1,368 @@
+<section class="instructor-page">
+  <!-- PAGE HEADER -->
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">INSTRUCTOR / COURSES</span>
+
+      <h1>
+        {{ t('إدارة دوراتي', 'My Courses') }}
+      </h1>
+
+      <p>
+        {{
+          t(
+            'أنشئ دوراتك التعليمية وأدر محتواها ونشرها.',
+            'Create, manage and publish your courses.'
+          )
+        }}
+      </p>
+    </div>
+
+    <button type="button" class="primary-button" (click)="openCreate()">
+      + {{ t('دورة جديدة', 'New Course') }}
+    </button>
+  </div>
+
+  <!-- MESSAGES -->
+  @if (error()) {
+    <div class="alert error">
+      {{ error() }}
+    </div>
+  }
+
+  @if (message()) {
+    <div class="alert success">
+      {{ message() }}
+    </div>
+  }
+
+  <!-- ADD / EDIT COURSE FORM -->
+  @if (formOpen()) {
+    <section class="panel editor-panel">
+      <div class="panel-heading">
+        <h2>
+          {{
+            editingId === null
+              ? t('إنشاء دورة جديدة', 'Create New Course')
+              : t('تعديل الدورة', 'Edit Course')
+          }}
+        </h2>
+
+        <button type="button" class="close-button" (click)="closeForm()">✕</button>
+      </div>
+
+      <form #courseForm="ngForm" (ngSubmit)="save()">
+        <div class="form-grid">
+          <!-- TITLE -->
+          <div class="field full-width">
+            <label for="title">
+              {{ t('عنوان الدورة', 'Course Title') }}
+            </label>
+
+            <input
+              id="title"
+              name="title"
+              type="text"
+              [(ngModel)]="form.title"
+              maxlength="200"
+              required
+              [placeholder]="t('مثلاً: تعلم Flutter من الصفر', 'Example: Flutter from Scratch')"
+            />
+          </div>
+
+          <!-- DESCRIPTION -->
+          <div class="field full-width">
+            <label for="description">
+              {{ t('وصف الدورة', 'Description') }}
+            </label>
+
+            <textarea
+              id="description"
+              name="description"
+              rows="4"
+              maxlength="3000"
+              required
+              [(ngModel)]="form.description"
+              [placeholder]="t('اكتب وصفاً مختصراً للدورة...', 'Describe your course...')"
+            >
+            </textarea>
+          </div>
+
+          <!-- CATEGORY -->
+          <div class="field">
+            <label for="category">
+              {{ t('التصنيف', 'Category') }}
+            </label>
+
+            <select id="category" name="category" [(ngModel)]="form.categoryId" required>
+              <option [ngValue]="0">
+                {{ t('اختر التصنيف', 'Select Category') }}
+              </option>
+
+              @for (category of categories(); track category.id) {
+                <option [ngValue]="category.id">
+                  {{ category.name }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <!-- LEVEL -->
+          <div class="field">
+            <label for="level">
+              {{ t('المستوى', 'Level') }}
+            </label>
+
+            <select id="level" name="level" [(ngModel)]="form.level">
+              <option value="Beginner">
+                {{ language.text('beginner') }}
+              </option>
+
+              <option value="Intermediate">
+                {{ language.text('intermediate') }}
+              </option>
+
+              <option value="Advanced">
+                {{ language.text('advanced') }}
+              </option>
+            </select>
+          </div>
+
+          <!-- PRICE -->
+          <div class="field">
+            <label for="price">
+              {{ t('السعر بالدولار', 'Price (USD)') }}
+            </label>
+
+            <input
+              id="price"
+              name="price"
+              type="number"
+              min="0"
+              max="999999"
+              step="0.01"
+              required
+              [(ngModel)]="form.price"
+            />
+
+            <small>
+              {{ t('اكتب 0 لجعل الدورة مجانية.', 'Enter 0 for a free course.') }}
+            </small>
+          </div>
+
+          <!-- IMAGE UPLOAD -->
+          <div class="field">
+            <label for="course-image">
+              {{ t('صورة الدورة', 'Course Image') }}
+            </label>
+
+            <input
+              id="course-image"
+              class="file-input"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              (change)="onImageSelected($event)"
+            />
+
+            <small>
+              {{ t('JPG أو PNG أو WEBP — بحد أقصى 3 MB', 'JPG, PNG or WEBP — maximum 3 MB') }}
+            </small>
+          </div>
+
+          <!-- IMAGE PREVIEW -->
+          @if (form.thumbnailUrl) {
+            <div class="image-preview">
+              <img [src]="form.thumbnailUrl" alt="Course thumbnail" />
+            </div>
+          }
+
+          @if (uploading()) {
+            <p class="upload-state">
+              {{ t('جاري رفع الصورة...', 'Uploading image...') }}
+            </p>
+          }
+        </div>
+
+        <!-- PUBLICATION -->
+        <div class="publication-box">
+          <label class="checkbox-label">
+            <input type="checkbox" name="isPublished" [(ngModel)]="form.isPublished" />
+
+            <span>
+              {{ t('نشر الدورة للطلاب', 'Publish course for students') }}
+            </span>
+          </label>
+
+          <p>
+            {{
+              t(
+                'إذا لم تحدد هذا الخيار، ستبقى الدورة مسودة ولا تظهر في الصفحة الرئيسية.',
+                'Leave unchecked to keep the course as a draft.'
+              )
+            }}
+          </p>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="courseForm.invalid || form.categoryId === 0 || saving() || uploading()"
+          >
+            @if (saving()) {
+              {{ t('جاري الحفظ...', 'Saving...') }}
+            } @else {
+              {{
+                editingId === null
+                  ? t('إنشاء الدورة', 'Create Course')
+                  : t('حفظ التعديلات', 'Save Changes')
+              }}
+            }
+          </button>
+
+          <button type="button" class="secondary-button" (click)="closeForm()">
+            {{ t('إلغاء', 'Cancel') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- COURSES LIST -->
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>{{ t('دوراتي', 'My Courses') }}</h2>
+
+        <p>
+          {{ totalCount() }}
+          {{ t('دورة', 'courses') }}
+        </p>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <input
+        type="search"
+        name="search"
+        [(ngModel)]="search"
+        (keyup.enter)="applyFilters()"
+        [placeholder]="t('ابحث عن دورة...', 'Search courses...')"
+      />
+
+      <select name="publicationFilter" [(ngModel)]="publicationFilter">
+        <option value="">
+          {{ t('كل الدورات', 'All Courses') }}
+        </option>
+
+        <option value="true">
+          {{ t('المنشورة', 'Published') }}
+        </option>
+
+        <option value="false">
+          {{ t('المسودات', 'Drafts') }}
+        </option>
+      </select>
+
+      <button type="button" class="primary-button" (click)="applyFilters()">
+        {{ t('بحث', 'Search') }}
+      </button>
+    </div>
+
+    <!-- LOADING -->
+    @if (loading()) {
+      <div class="empty-state">
+        {{ t('جاري تحميل الدورات...', 'Loading courses...') }}
+      </div>
+    } @else if (courses().length === 0) {
+      <div class="empty-state">
+        <h3>
+          {{ t('لا توجد دورات حالياً', 'No Courses Yet') }}
+        </h3>
+
+        <p>
+          {{
+            t(
+              'أنشئ دورتك الأولى باستخدام زر دورة جديدة.',
+              'Create your first course using the New Course button.'
+            )
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="course-list">
+        @for (course of courses(); track course.id) {
+          <article class="course-row">
+            <div class="course-thumbnail">
+              @if (course.thumbnailUrl) {
+                <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" />
+              } @else {
+                <div class="no-image">KHOTWA</div>
+              }
+            </div>
+
+            <div class="course-info">
+              <div class="course-badges">
+                <span class="category-label">
+                  {{ course.categoryName }}
+                </span>
+
+                <span class="status" [class.published]="course.isPublished">
+                  {{ course.isPublished ? t('منشورة', 'Published') : t('مسودة', 'Draft') }}
+                </span>
+              </div>
+
+              <h3>{{ course.title }}</h3>
+
+              <p>
+                {{ language.levelName(course.level) }}
+                ·
+                {{ course.lessonCount }}
+                {{ language.text('lessons') }}
+              </p>
+
+              <strong>
+                {{ course.price === 0 ? language.text('free') : course.price + ' USD' }}
+              </strong>
+            </div>
+
+            <div class="course-actions">
+              <button type="button" class="secondary-button" (click)="manageLessons(course)">
+                {{ t('إدارة الدروس', 'Manage Lessons') }}
+              </button>
+
+              <button type="button" class="secondary-button" (click)="openEdit(course)">
+                {{ t('تعديل', 'Edit') }}
+              </button>
+
+              <button type="button" class="delete-button" (click)="remove(course)">
+                {{ t('حذف', 'Delete') }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- PAGINATION -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button type="button" [disabled]="pageNumber === 1" (click)="changePage(pageNumber - 1)">
+            {{ language.text('previous') }}
+          </button>
+
+          <span> {{ pageNumber }} / {{ totalPages() }} </span>
+
+          <button
+            type="button"
+            [disabled]="pageNumber === totalPages()"
+            (click)="changePage(pageNumber + 1)"
+          >
+            {{ language.text('next') }}
+          </button>
+        </div>
+      }
+    }
+  </section>
+</section>

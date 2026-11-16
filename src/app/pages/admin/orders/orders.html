@@ -1,0 +1,332 @@
+<section class="orders-page">
+  <!-- HEADER -->
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">ADMIN / ORDERS</span>
+
+      <h1>
+        {{ t('إدارة الطلبات', 'Order Management') }}
+      </h1>
+
+      <p>
+        {{
+          t(
+            'متابعة طلبات الطلاب ومراجعة عمليات الشراء.',
+            'Monitor student orders and review purchases.'
+          )
+        }}
+      </p>
+    </div>
+  </header>
+
+  @if (!isAdmin()) {
+    <div class="empty-state">
+      {{
+        t('هذه الصفحة متاحة لمدير النظام فقط.', 'This page is available to administrators only.')
+      }}
+    </div>
+  } @else {
+    <!-- ALERTS -->
+    @if (error()) {
+      <div class="alert error">
+        {{ error() }}
+      </div>
+    }
+
+    @if (message()) {
+      <div class="alert success">
+        {{ message() }}
+      </div>
+    }
+
+    <!-- SUMMARY -->
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>
+          {{ t('إجمالي الطلبات', 'Total Orders') }}
+        </span>
+
+        <strong>{{ summary().total }}</strong>
+      </article>
+
+      <article class="stat-card pending-stat">
+        <span>
+          {{ t('طلبات معلقة', 'Pending Orders') }}
+        </span>
+
+        <strong>{{ summary().pending }}</strong>
+      </article>
+
+      <article class="stat-card paid-stat">
+        <span>
+          {{ t('طلبات مدفوعة', 'Paid Orders') }}
+        </span>
+
+        <strong>{{ summary().paid }}</strong>
+      </article>
+
+      <article class="stat-card cancelled-stat">
+        <span>
+          {{ t('طلبات ملغية', 'Cancelled Orders') }}
+        </span>
+
+        <strong>{{ summary().cancelled }}</strong>
+      </article>
+    </section>
+
+    <!-- ORDERS LIST -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>
+            {{ t('جميع الطلبات', 'All Orders') }}
+          </h2>
+
+          <p>
+            {{ totalCount() }}
+            {{ t('طلب', 'orders') }}
+          </p>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters">
+        <input
+          type="number"
+          min="1"
+          [(ngModel)]="studentId"
+          name="studentId"
+          [placeholder]="t('رقم الطالب', 'Student ID')"
+        />
+
+        <select [(ngModel)]="statusFilter" name="statusFilter">
+          <option value="">
+            {{ t('جميع الحالات', 'All Statuses') }}
+          </option>
+
+          @for (status of statusOptions; track status) {
+            <option [ngValue]="status">
+              {{ statusName(status) }}
+            </option>
+          }
+        </select>
+
+        <button type="button" class="primary-button" (click)="applyFilters()">
+          {{ t('تطبيق الفلاتر', 'Apply Filters') }}
+        </button>
+
+        <button type="button" class="secondary-button" (click)="clearFilters()">
+          {{ t('مسح الفلاتر', 'Clear Filters') }}
+        </button>
+      </div>
+
+      <!-- LOADING -->
+      @if (loading()) {
+        <div class="empty-state">
+          {{ t('جاري تحميل الطلبات...', 'Loading orders...') }}
+        </div>
+      } @else if (orders().length === 0) {
+        <div class="empty-state">
+          {{ t('لا توجد طلبات مطابقة للبحث.', 'No matching orders found.') }}
+        </div>
+      } @else {
+        <!-- TABLE -->
+        <div class="table-scroll">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>{{ t('رقم الطلب', 'Order ID') }}</th>
+
+                <th>{{ t('الطالب', 'Student') }}</th>
+
+                <th>{{ t('تاريخ الطلب', 'Order Date') }}</th>
+
+                <th>{{ t('عدد الدورات', 'Courses') }}</th>
+
+                <th>{{ t('المبلغ الإجمالي', 'Total Amount') }}</th>
+
+                <th>{{ t('الحالة', 'Status') }}</th>
+
+                <th>{{ t('الإجراءات', 'Actions') }}</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (order of orders(); track order.id) {
+                <tr>
+                  <!-- ORDER ID -->
+                  <td>
+                    <strong>#{{ order.id }}</strong>
+                  </td>
+
+                  <!-- STUDENT -->
+                  <td>
+                    <span class="student-id"> #{{ order.studentId }} </span>
+                  </td>
+
+                  <!-- DATE -->
+                  <td class="date-cell">
+                    {{ formatDate(order.orderDate) }}
+                  </td>
+
+                  <!-- COURSES COUNT -->
+                  <td>
+                    {{ order.items.length }}
+                  </td>
+
+                  <!-- AMOUNT -->
+                  <td class="amount-cell">
+                    {{ formatAmount(order.totalAmount) }}
+                  </td>
+
+                  <!-- STATUS -->
+                  <td>
+                    <span
+                      class="status-tag"
+                      [class.pending]="order.status === 'Pending'"
+                      [class.paid]="order.status === 'Paid'"
+                      [class.cancelled]="order.status === 'Cancelled'"
+                    >
+                      {{ statusName(order.status) }}
+                    </span>
+                  </td>
+
+                  <!-- ACTIONS -->
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="secondary-button" (click)="viewDetails(order)">
+                        {{ t('التفاصيل', 'Details') }}
+                      </button>
+
+                      @if (order.status === 'Pending') {
+                        <button
+                          type="button"
+                          class="delete-button"
+                          [disabled]="deletingId() !== null"
+                          (click)="remove(order)"
+                        >
+                          {{
+                            deletingId() === order.id
+                              ? t('جاري الحذف...', 'Deleting...')
+                              : t('حذف', 'Delete')
+                          }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button
+              type="button"
+              [disabled]="pageNumber === 1 || loading()"
+              (click)="loadOrders(pageNumber - 1)"
+            >
+              {{ t('السابق', 'Previous') }}
+            </button>
+
+            <span> {{ pageNumber }} / {{ totalPages() }} </span>
+
+            <button
+              type="button"
+              [disabled]="pageNumber >= totalPages() || loading()"
+              (click)="loadOrders(pageNumber + 1)"
+            >
+              {{ t('التالي', 'Next') }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+
+    <!-- ORDER DETAILS -->
+    @if (selectedOrder(); as order) {
+      <section class="panel details-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow"> ORDER DETAILS </span>
+
+            <h2>
+              {{ t('تفاصيل الطلب', 'Order Details') }}
+              #{{ order.id }}
+            </h2>
+          </div>
+
+          <button type="button" class="close-button" (click)="closeDetails()">✕</button>
+        </div>
+
+        @if (loadingDetails()) {
+          <div class="empty-state">
+            {{ t('جاري تحميل التفاصيل...', 'Loading details...') }}
+          </div>
+        } @else {
+          <div class="details-grid">
+            <div>
+              <span>{{ t('رقم الطالب', 'Student ID') }}</span>
+              <strong>#{{ order.studentId }}</strong>
+            </div>
+
+            <div>
+              <span>{{ t('تاريخ الطلب', 'Order Date') }}</span>
+              <strong>{{ formatDate(order.orderDate) }}</strong>
+            </div>
+
+            <div>
+              <span>{{ t('حالة الطلب', 'Order Status') }}</span>
+              <strong>{{ statusName(order.status) }}</strong>
+            </div>
+
+            <div>
+              <span>{{ t('الإجمالي', 'Total Amount') }}</span>
+              <strong>{{ formatAmount(order.totalAmount) }}</strong>
+            </div>
+          </div>
+
+          <h3 class="items-title">
+            {{ t('الدورات الموجودة في الطلب', 'Courses in this Order') }}
+          </h3>
+
+          @if (order.items.length === 0) {
+            <div class="empty-state">
+              {{ t('لا توجد دورات في هذا الطلب.', 'No courses in this order.') }}
+            </div>
+          } @else {
+            <div class="table-scroll">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>{{ t('رقم الدورة', 'Course ID') }}</th>
+
+                    <th>{{ t('اسم الدورة', 'Course Title') }}</th>
+
+                    <th>{{ t('السعر وقت الشراء', 'Price at Purchase') }}</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (item of order.items; track item.id) {
+                    <tr>
+                      <td>#{{ item.courseId }}</td>
+
+                      <td>{{ item.courseTitle }}</td>
+
+                      <td class="amount-cell">
+                        {{ formatAmount(item.priceAtPurchase) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </section>
+    }
+  }
+</section>

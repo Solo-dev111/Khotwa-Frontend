@@ -1,0 +1,273 @@
+<section class="lessons-page">
+  <!-- HEADER -->
+  <div class="page-heading">
+    <div>
+      <button type="button" class="back-button" (click)="goBack()">
+        {{ t('العودة إلى دوراتي', 'Back to My Courses') }}
+      </button>
+
+      <p class="eyebrow">INSTRUCTOR / LESSONS</p>
+
+      <h1>
+        {{ t('إدارة الدروس', 'Manage Lessons') }}
+      </h1>
+
+      <p class="course-title">
+        {{ courseTitle() || t('الدورة', 'Course') }}
+      </p>
+    </div>
+
+    <button type="button" class="primary-button" (click)="openCreate()">
+      + {{ t('إضافة درس', 'Add Lesson') }}
+    </button>
+  </div>
+
+  <!-- MESSAGES -->
+
+  @if (error()) {
+    <div class="alert error">
+      {{ error() }}
+    </div>
+  }
+
+  @if (message()) {
+    <div class="alert success">
+      {{ message() }}
+    </div>
+  }
+
+  @if (loadingDetails()) {
+    <div class="alert info">
+      {{ t('جاري فتح بيانات الدرس...', 'Loading lesson details...') }}
+    </div>
+  }
+
+  <!-- ADD / EDIT FORM -->
+
+  @if (formOpen()) {
+    <section class="panel editor-panel">
+      <div class="panel-heading">
+        <h2>
+          {{
+            editingId === null
+              ? t('إضافة درس جديد', 'Add New Lesson')
+              : t('تعديل الدرس', 'Edit Lesson')
+          }}
+        </h2>
+
+        <button type="button" class="close-button" (click)="closeForm()">✕</button>
+      </div>
+
+      <form #lessonForm="ngForm" (ngSubmit)="save()">
+        <!-- TITLE -->
+        <div class="field">
+          <label for="lesson-title">
+            {{ t('عنوان الدرس', 'Lesson Title') }}
+          </label>
+
+          <input
+            id="lesson-title"
+            name="title"
+            type="text"
+            [(ngModel)]="form.title"
+            required
+            maxlength="200"
+            [placeholder]="t('مثلاً: مقدمة عن Flutter', 'Example: Introduction to Flutter')"
+          />
+        </div>
+
+        <!-- CONTENT -->
+        <div class="field">
+          <label for="lesson-content">
+            {{ t('محتوى الدرس النصي', 'Lesson Content') }}
+          </label>
+
+          <textarea
+            id="lesson-content"
+            name="content"
+            rows="6"
+            maxlength="10000"
+            [(ngModel)]="form.content"
+            [placeholder]="t('اكتب شرح الدرس هنا...', 'Write your lesson content here...')"
+          >
+          </textarea>
+        </div>
+
+        <!-- VIDEO URL -->
+        <div class="field">
+          <label for="video-url">
+            {{ t('رابط الفيديو', 'Video URL') }}
+          </label>
+
+          <input
+            id="video-url"
+            name="videoUrl"
+            type="url"
+            maxlength="2048"
+            [(ngModel)]="form.videoUrl"
+            placeholder="https://example.com/video"
+          />
+
+          <small>
+            {{
+              t(
+                'يمكنك إدخال رابط فيديو أو ترك الحقل فارغاً.',
+                'Enter a video URL or leave this field empty.'
+              )
+            }}
+          </small>
+        </div>
+
+        <!-- SORT ORDER -->
+        <div class="field">
+          <label for="sort-order">
+            {{ t('ترتيب الدرس', 'Lesson Order') }}
+          </label>
+
+          <input
+            id="sort-order"
+            name="sortOrder"
+            type="number"
+            min="0"
+            step="1"
+            required
+            [(ngModel)]="form.sortOrder"
+          />
+
+          <small>
+            {{
+              t(
+                'مثلاً 1 للدرس الأول، و2 للدرس الثاني.',
+                'For example, 1 for the first lesson and 2 for the second.'
+              )
+            }}
+          </small>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-setting">
+          <label class="checkbox-label">
+            <input type="checkbox" name="isPreview" [(ngModel)]="form.isPreview" />
+
+            <span>
+              {{ t('السماح بالمعاينة المجانية', 'Allow Free Preview') }}
+            </span>
+          </label>
+
+          <p>
+            {{
+              t(
+                'عند التفعيل يستطيع الزائر مشاهدة هذا الدرس دون شراء الدورة.',
+                'Visitors can view this lesson without purchasing the course.'
+              )
+            }}
+          </p>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="form-actions">
+          <button type="submit" class="primary-button" [disabled]="lessonForm.invalid || saving()">
+            @if (saving()) {
+              {{ t('جاري الحفظ...', 'Saving...') }}
+            } @else {
+              {{
+                editingId === null
+                  ? t('إضافة الدرس', 'Add Lesson')
+                  : t('حفظ التعديلات', 'Save Changes')
+              }}
+            }
+          </button>
+
+          <button type="button" class="secondary-button" (click)="closeForm()">
+            {{ t('إلغاء', 'Cancel') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- LESSON LIST -->
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>
+          {{ t('دروس الدورة', 'Course Lessons') }}
+        </h2>
+
+        <p>
+          {{ lessons().length }}
+          {{ t('دروس', 'lessons') }}
+        </p>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state">
+        {{ t('جاري تحميل الدروس...', 'Loading lessons...') }}
+      </div>
+    } @else if (lessons().length === 0) {
+      <div class="empty-state">
+        <h3>
+          {{ t('لا توجد دروس حتى الآن', 'No Lessons Yet') }}
+        </h3>
+
+        <p>
+          {{
+            t(
+              'أضف الدرس الأول باستخدام زر إضافة درس.',
+              'Create your first lesson using the Add Lesson button.'
+            )
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="lesson-list">
+        @for (lesson of lessons(); track lesson.id) {
+          <article class="lesson-row">
+            <!-- ORDER -->
+            <div class="order-number">
+              {{ lesson.sortOrder }}
+            </div>
+
+            <!-- LESSON INFORMATION -->
+            <div class="lesson-info">
+              <h3>{{ lesson.title }}</h3>
+
+              @if (lesson.isPreview) {
+                <span class="lesson-status preview">
+                  {{ t('معاينة مجانية', 'Free Preview') }}
+                </span>
+              } @else {
+                <span class="lesson-status">
+                  {{ t('للطلاب المسجلين', 'Enrolled Students') }}
+                </span>
+              }
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="lesson-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                [disabled]="loadingDetails()"
+                (click)="openEdit(lesson.id)"
+              >
+                {{ t('تعديل', 'Edit') }}
+              </button>
+
+              <button
+                type="button"
+                class="delete-button"
+                [disabled]="deletingId() !== null"
+                (click)="remove(lesson)"
+              >
+                {{ t('حذف', 'Delete') }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

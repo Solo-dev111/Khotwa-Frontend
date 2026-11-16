@@ -1,0 +1,238 @@
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="eyebrow"> KHOTWA / LEARNING PLATFORM </span>
+
+      <h1>{{ language.text('headline') }}</h1>
+
+      <p>{{ language.text('introduction') }}</p>
+
+      <a href="#catalog" class="explore-link">
+        {{ language.text('catalog') }}
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+
+    <div class="hero-decoration" aria-hidden="true">
+      <span>خطوة</span>
+      <div class="decoration-line"></div>
+      <small>LEARN / BUILD / GROW</small>
+    </div>
+  </div>
+</section>
+
+<!-- COURSES SECTION -->
+
+<section class="catalog" id="catalog">
+  <div class="section-heading">
+    <div>
+      <span class="section-label"> 01 / COURSES </span>
+
+      <h2>{{ language.text('catalog') }}</h2>
+
+      <p>{{ language.text('catalogDescription') }}</p>
+    </div>
+  </div>
+
+  <!-- SEARCH AND FILTERS -->
+
+  <form class="filters" (ngSubmit)="applyFilters()">
+    <!-- Search -->
+    <div class="filter-field search-field">
+      <label for="course-search">
+        {{ language.text('courses') }}
+      </label>
+
+      <input
+        id="course-search"
+        type="search"
+        name="search"
+        [(ngModel)]="search"
+        [placeholder]="language.text('search')"
+      />
+    </div>
+
+    <!-- Category -->
+    <div class="filter-field">
+      <label for="category">
+        {{ language.text('category') }}
+      </label>
+
+      <select id="category" name="category" [(ngModel)]="categoryId">
+        <option [ngValue]="null">
+          {{ language.text('allCategories') }}
+        </option>
+
+        @for (category of categories(); track category.id) {
+          <option [ngValue]="category.id">
+            {{ category.name }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- Level -->
+    <div class="filter-field">
+      <label for="level">
+        {{ language.text('level') }}
+      </label>
+
+      <select id="level" name="level" [(ngModel)]="level">
+        <option value="">
+          {{ language.text('allLevels') }}
+        </option>
+
+        <option value="Beginner">
+          {{ language.text('beginner') }}
+        </option>
+
+        <option value="Intermediate">
+          {{ language.text('intermediate') }}
+        </option>
+
+        <option value="Advanced">
+          {{ language.text('advanced') }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Minimum Price -->
+    <div class="filter-field price-field">
+      <label for="min-price">
+        {{ language.text('minPrice') }}
+      </label>
+
+      <input id="min-price" type="number" name="minPrice" min="0" [(ngModel)]="minPrice" />
+    </div>
+
+    <!-- Maximum Price -->
+    <div class="filter-field price-field">
+      <label for="max-price">
+        {{ language.text('maxPrice') }}
+      </label>
+
+      <input id="max-price" type="number" name="maxPrice" min="0" [(ngModel)]="maxPrice" />
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-actions">
+      <button class="primary-button" type="submit">
+        {{ language.text('apply') }}
+      </button>
+
+      <button class="reset-button" type="button" (click)="resetFilters()">
+        {{ language.text('reset') }}
+      </button>
+    </div>
+  </form>
+
+  <!-- LOADING STATE -->
+
+  @if (loading()) {
+    <div class="state-message">
+      {{ language.text('loading') }}
+    </div>
+  }
+
+  <!-- ERROR STATE -->
+
+  @else if (error()) {
+    <div class="state-message">
+      <p>{{ language.text('error') }}</p>
+
+      <button type="button" (click)="loadCourses()">
+        {{ language.text('retry') }}
+      </button>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+
+  @else if (courses().length === 0) {
+    <div class="state-message">
+      {{ language.text('empty') }}
+    </div>
+  }
+
+  <!-- COURSES LIST -->
+
+  @else {
+    <div class="results-count">{{ totalCount() }} {{ language.text('result') }}</div>
+
+    <div class="course-grid">
+      @for (course of courses(); track course.id) {
+        <a class="course-card" [routerLink]="['/courses', course.id]">
+          <!-- Course Image -->
+          <div class="course-image">
+            @if (course.thumbnailUrl) {
+              <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" />
+            } @else {
+              <div class="image-placeholder">
+                <span>KHOTWA</span>
+              </div>
+            }
+          </div>
+
+          <!-- Course Information -->
+          <div class="course-content">
+            <div class="course-meta">
+              <span>{{ course.categoryName }}</span>
+
+              <span>
+                {{ language.levelName(course.level) }}
+              </span>
+            </div>
+
+            <h3>{{ course.title }}</h3>
+
+            <p class="instructor">
+              {{ language.text('instructor') }}:
+              {{ course.instructorName }}
+            </p>
+
+            <!-- Price and Lessons -->
+            <div class="course-bottom">
+              <span class="lesson-count">
+                {{ course.lessonCount }}
+                {{ language.text('lessons') }}
+              </span>
+
+              <strong class="price">
+                @if (course.price === 0) {
+                  {{ language.text('free') }}
+                } @else {
+                  {{ course.price }} USD
+                }
+              </strong>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+
+    <!-- PAGINATION -->
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button type="button" [disabled]="pageNumber === 1" (click)="changePage(pageNumber - 1)">
+          {{ language.text('previous') }}
+        </button>
+
+        <span>
+          {{ language.text('page') }}
+          {{ pageNumber }}
+          {{ language.text('of') }}
+          {{ totalPages() }}
+        </span>
+
+        <button
+          type="button"
+          [disabled]="pageNumber === totalPages()"
+          (click)="changePage(pageNumber + 1)"
+        >
+          {{ language.text('next') }}
+        </button>
+      </div>
+    }
+  }
+</section>

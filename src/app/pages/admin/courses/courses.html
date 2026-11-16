@@ -1,0 +1,494 @@
+<section class="courses-page">
+  <!-- HEADER -->
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">ADMIN / COURSES</span>
+
+      <h1>
+        {{ t('إدارة جميع الدورات', 'All Courses') }}
+      </h1>
+
+      <p>
+        {{
+          t(
+            'إدارة ومراجعة الدورات المنشورة والمسودات لجميع المدربين.',
+            'Manage published courses and drafts from all instructors.'
+          )
+        }}
+      </p>
+    </div>
+
+    <button type="button" class="primary-button" (click)="openCreate()">
+      + {{ t('إضافة دورة', 'Add Course') }}
+    </button>
+  </header>
+
+  @if (!isAdmin()) {
+    <div class="empty-state">
+      {{
+        t('هذه الصفحة متاحة لمدير النظام فقط.', 'This page is available to administrators only.')
+      }}
+    </div>
+  } @else {
+    <!-- ALERTS -->
+    @if (error()) {
+      <div class="alert error">
+        {{ error() }}
+      </div>
+    }
+
+    @if (message()) {
+      <div class="alert success">
+        {{ message() }}
+      </div>
+    }
+
+    <!-- CREATE / EDIT FORM -->
+    @if (formOpen()) {
+      <section class="panel editor-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow"> COURSE EDITOR </span>
+
+            <h2>
+              {{
+                editingId === null
+                  ? t('إنشاء دورة جديدة', 'Create New Course')
+                  : t('تعديل الدورة', 'Edit Course')
+              }}
+            </h2>
+          </div>
+
+          <button type="button" class="close-button" (click)="closeForm()">✕</button>
+        </div>
+
+        @if (loadingOptions()) {
+          <p class="muted">
+            {{ t('جاري تحميل التصنيفات والمدربين...', 'Loading categories and instructors...') }}
+          </p>
+        } @else {
+          <form #courseForm="ngForm" (ngSubmit)="save()">
+            <div class="form-grid">
+              <!-- TITLE -->
+              <div class="field full-width">
+                <label for="courseTitle">
+                  {{ t('عنوان الدورة', 'Course Title') }}
+                </label>
+
+                <input
+                  id="courseTitle"
+                  name="title"
+                  type="text"
+                  [(ngModel)]="form.title"
+                  required
+                  maxlength="200"
+                  [placeholder]="t('أدخل عنوان الدورة', 'Enter course title')"
+                />
+              </div>
+
+              <!-- DESCRIPTION -->
+              <div class="field full-width">
+                <label for="courseDescription">
+                  {{ t('وصف الدورة', 'Description') }}
+                </label>
+
+                <textarea
+                  id="courseDescription"
+                  name="description"
+                  [(ngModel)]="form.description"
+                  required
+                  maxlength="3000"
+                  rows="5"
+                  [placeholder]="
+                    t('اكتب وصفاً واضحاً للدورة...', 'Write a clear course description...')
+                  "
+                >
+                </textarea>
+              </div>
+
+              <!-- CATEGORY -->
+              <div class="field">
+                <label for="courseCategory">
+                  {{ t('التصنيف', 'Category') }}
+                </label>
+
+                <select
+                  id="courseCategory"
+                  name="categoryId"
+                  [(ngModel)]="form.categoryId"
+                  required
+                >
+                  <option [ngValue]="0" disabled>
+                    {{ t('اختر التصنيف', 'Select Category') }}
+                  </option>
+
+                  @for (category of categories(); track category.id) {
+                    <option [ngValue]="category.id">
+                      {{ category.name }}
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <!-- INSTRUCTOR -->
+              <div class="field">
+                <label for="courseInstructor">
+                  {{ t('المدرب المسؤول', 'Instructor') }}
+                </label>
+
+                <select
+                  id="courseInstructor"
+                  name="instructorId"
+                  [(ngModel)]="form.instructorId"
+                  required
+                >
+                  <option [ngValue]="null" disabled>
+                    {{ t('اختر المدرب', 'Select Instructor') }}
+                  </option>
+
+                  @for (instructor of instructors(); track instructor.id) {
+                    <option [ngValue]="instructor.id">
+                      {{ instructor.fullName }}
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <!-- PRICE -->
+              <div class="field">
+                <label for="coursePrice">
+                  {{ t('السعر', 'Price') }}
+                </label>
+
+                <input
+                  id="coursePrice"
+                  name="price"
+                  type="number"
+                  [(ngModel)]="form.price"
+                  required
+                  min="0"
+                  max="999999"
+                  step="0.01"
+                />
+              </div>
+
+              <!-- LEVEL -->
+              <div class="field">
+                <label for="courseLevel">
+                  {{ t('المستوى', 'Level') }}
+                </label>
+
+                <select id="courseLevel" name="level" [(ngModel)]="form.level" required>
+                  <option value="Beginner">
+                    {{ t('مبتدئ', 'Beginner') }}
+                  </option>
+
+                  <option value="Intermediate">
+                    {{ t('متوسط', 'Intermediate') }}
+                  </option>
+
+                  <option value="Advanced">
+                    {{ t('متقدم', 'Advanced') }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- THUMBNAIL URL -->
+              <div class="field full-width">
+                <label for="thumbnailUrl">
+                  {{ t('رابط صورة الدورة', 'Course Image URL') }}
+                </label>
+
+                <input
+                  id="thumbnailUrl"
+                  name="thumbnailUrl"
+                  type="url"
+                  [(ngModel)]="form.thumbnailUrl"
+                  dir="ltr"
+                  placeholder="https://example.com/image.jpg"
+                />
+
+                <small>
+                  {{
+                    t(
+                      'أدخل رابط صورة مباشر. رفع الصور من الجهاز غير متاح عبر الـ API الحالي.',
+                      'Enter a direct image URL. Local image upload is not supported by the current API.'
+                    )
+                  }}
+                </small>
+              </div>
+
+              <!-- PUBLICATION -->
+              <div class="field publication-field full-width">
+                <label class="publication-option">
+                  <input type="checkbox" name="isPublished" [(ngModel)]="form.isPublished" />
+
+                  <span>
+                    <strong>
+                      {{ t('نشر الدورة', 'Publish Course') }}
+                    </strong>
+
+                    <small>
+                      {{
+                        t(
+                          'السماح للطلاب بمشاهدة الدورة في الموقع.',
+                          'Make this course visible to students.'
+                        )
+                      }}
+                    </small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="primary-button"
+                [disabled]="
+                  courseForm.invalid ||
+                  saving() ||
+                  loadingOptions() ||
+                  categories().length === 0 ||
+                  instructors().length === 0
+                "
+              >
+                {{ saving() ? t('جاري الحفظ...', 'Saving...') : t('حفظ الدورة', 'Save Course') }}
+              </button>
+
+              <button
+                type="button"
+                class="secondary-button"
+                [disabled]="saving()"
+                (click)="closeForm()"
+              >
+                {{ t('إلغاء', 'Cancel') }}
+              </button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+
+    <!-- COURSES LIST -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>
+            {{ t('جميع الدورات', 'All Courses') }}
+          </h2>
+
+          <p>
+            {{ totalCount() }}
+            {{ t('دورة', 'courses') }}
+          </p>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters">
+        <input
+          type="search"
+          [(ngModel)]="search"
+          [placeholder]="t('ابحث عن دورة...', 'Search courses...')"
+          (keyup.enter)="applyFilters()"
+        />
+
+        <select [(ngModel)]="categoryFilter">
+          <option [ngValue]="null">
+            {{ t('جميع التصنيفات', 'All Categories') }}
+          </option>
+
+          @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">
+              {{ category.name }}
+            </option>
+          }
+        </select>
+
+        <select [(ngModel)]="levelFilter">
+          <option value="">
+            {{ t('جميع المستويات', 'All Levels') }}
+          </option>
+
+          <option value="Beginner">
+            {{ t('مبتدئ', 'Beginner') }}
+          </option>
+
+          <option value="Intermediate">
+            {{ t('متوسط', 'Intermediate') }}
+          </option>
+
+          <option value="Advanced">
+            {{ t('متقدم', 'Advanced') }}
+          </option>
+        </select>
+
+        <select [(ngModel)]="publicationFilter">
+          <option value="">
+            {{ t('جميع الحالات', 'All Statuses') }}
+          </option>
+
+          <option value="true">
+            {{ t('منشورة', 'Published') }}
+          </option>
+
+          <option value="false">
+            {{ t('مسودة', 'Draft') }}
+          </option>
+        </select>
+
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="minPrice"
+          [placeholder]="t('أقل سعر', 'Min Price')"
+        />
+
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="maxPrice"
+          [placeholder]="t('أعلى سعر', 'Max Price')"
+        />
+
+        <button type="button" class="primary-button" (click)="applyFilters()">
+          {{ t('تطبيق الفلاتر', 'Apply Filters') }}
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          {{ t('جاري تحميل الدورات...', 'Loading courses...') }}
+        </div>
+      } @else if (courses().length === 0) {
+        <div class="empty-state">
+          {{ t('لا توجد دورات مطابقة للبحث.', 'No matching courses found.') }}
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table class="courses-table">
+            <thead>
+              <tr>
+                <th>{{ t('الدورة', 'Course') }}</th>
+                <th>{{ t('المدرب', 'Instructor') }}</th>
+                <th>{{ t('التصنيف', 'Category') }}</th>
+                <th>{{ t('المستوى', 'Level') }}</th>
+                <th>{{ t('السعر', 'Price') }}</th>
+                <th>{{ t('الدروس', 'Lessons') }}</th>
+                <th>{{ t('الحالة', 'Status') }}</th>
+                <th>{{ t('الإجراءات', 'Actions') }}</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (course of courses(); track course.id) {
+                <tr>
+                  <!-- COURSE -->
+                  <td>
+                    <div class="course-cell">
+                      @if (course.thumbnailUrl) {
+                        <img
+                          [src]="course.thumbnailUrl"
+                          [alt]="course.title"
+                          class="course-thumbnail"
+                        />
+                      } @else {
+                        <div class="course-placeholder">K.</div>
+                      }
+
+                      <div class="course-details">
+                        <strong>{{ course.title }}</strong>
+
+                        <small> #{{ course.id }} </small>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- INSTRUCTOR -->
+                  <td>
+                    <span class="instructor-name">
+                      {{ course.instructorName }}
+                    </span>
+                  </td>
+
+                  <!-- CATEGORY -->
+                  <td>
+                    {{ course.categoryName }}
+                  </td>
+
+                  <!-- LEVEL -->
+                  <td>
+                    {{ levelName(course.level) }}
+                  </td>
+
+                  <!-- PRICE -->
+                  <td class="price-cell">
+                    {{ course.price }}
+                  </td>
+
+                  <!-- LESSONS -->
+                  <td>
+                    {{ course.lessonCount }}
+                  </td>
+
+                  <!-- STATUS -->
+                  <td>
+                    <span class="status-tag" [class.published]="course.isPublished">
+                      {{ course.isPublished ? t('منشورة', 'Published') : t('مسودة', 'Draft') }}
+                    </span>
+                  </td>
+
+                  <!-- ACTIONS -->
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="secondary-button" (click)="openEdit(course)">
+                        {{ t('تعديل', 'Edit') }}
+                      </button>
+
+                      <button
+                        type="button"
+                        class="delete-button"
+                        [disabled]="deletingId() !== null || saving()"
+                        (click)="remove(course)"
+                      >
+                        {{
+                          deletingId() === course.id
+                            ? t('جاري الحذف...', 'Deleting...')
+                            : t('حذف', 'Delete')
+                        }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button
+              type="button"
+              [disabled]="pageNumber === 1 || loading()"
+              (click)="loadCourses(pageNumber - 1)"
+            >
+              {{ t('السابق', 'Previous') }}
+            </button>
+
+            <span> {{ pageNumber }} / {{ totalPages() }} </span>
+
+            <button
+              type="button"
+              [disabled]="pageNumber >= totalPages() || loading()"
+              (click)="loadCourses(pageNumber + 1)"
+            >
+              {{ t('التالي', 'Next') }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+  }
+</section>

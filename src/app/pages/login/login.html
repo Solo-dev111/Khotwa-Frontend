@@ -1,0 +1,72 @@
+<section class="auth-layout">
+  <div class="auth-intro">
+    <span class="auth-eyebrow">KHOTWA / ACCOUNT</span>
+
+    <h1>{{ language.text('loginTitle') }}</h1>
+
+    <p>{{ language.text('loginDescription') }}</p>
+
+    <div class="auth-intro-footer">LEARN. CREATE. GROW.</div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <span>01 / ACCOUNT</span>
+      <h2>{{ language.text('login') }}</h2>
+    </div>
+
+    <form #loginForm="ngForm" (ngSubmit)="submit()">
+      <div class="auth-field">
+        <label for="login-email">
+          {{ language.text('email') }}
+        </label>
+
+        <input
+          id="login-email"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          autocomplete="email"
+          required
+          email
+        />
+      </div>
+
+      <div class="auth-field">
+        <label for="login-password">
+          {{ language.text('password') }}
+        </label>
+
+        <input
+          id="login-password"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      @if (error()) {
+        <p class="auth-error">
+          {{ language.text(error()!) }}
+        </p>
+      }
+
+      <button class="auth-submit" type="submit" [disabled]="loginForm.invalid || loading()">
+        @if (loading()) {
+          {{ language.text('loggingIn') }}
+        } @else {
+          {{ language.text('login') }}
+        }
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ language.text('noAccount') }}
+      <a routerLink="/register">
+        {{ language.text('register') }}
+      </a>
+    </p>
+  </div>
+</section>

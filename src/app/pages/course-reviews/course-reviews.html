@@ -1,0 +1,223 @@
+<section class="reviews-section">
+  <div class="reviews-heading">
+    <div>
+      <p class="eyebrow">COURSE REVIEWS</p>
+
+      <h2>
+        {{ t('تقييمات الطلاب', 'Student Reviews') }}
+      </h2>
+
+      <p>
+        {{ totalCount() }}
+        {{ t('تقييم', 'reviews') }}
+      </p>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  @if (error()) {
+    <div class="review-alert error">
+      {{ error() }}
+    </div>
+  }
+
+  @if (message()) {
+    <div class="review-alert success">
+      {{ message() }}
+    </div>
+  }
+
+  <!-- STUDENT REVIEW ACTIONS -->
+  @if (canWrite()) {
+    <div class="my-review-panel">
+      @if (loadingMine()) {
+        <p class="muted">
+          {{ t('جاري التحقق من تقييمك...', 'Checking your review...') }}
+        </p>
+      } @else if (myReview(); as own) {
+        <div class="my-review-heading">
+          <div>
+            <span class="my-review-label">
+              {{ t('تقييمك لهذه الدورة', 'Your Review') }}
+            </span>
+
+            <div class="stars-display">
+              @for (star of stars; track star) {
+                <span [class.filled]="star <= own.rating"> ★ </span>
+              }
+            </div>
+          </div>
+
+          <div class="review-actions">
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="deleting()"
+              (click)="openEdit()"
+            >
+              {{ t('تعديل', 'Edit') }}
+            </button>
+
+            <button type="button" class="delete-button" [disabled]="deleting()" (click)="remove()">
+              {{ deleting() ? t('جاري الحذف...', 'Deleting...') : t('حذف', 'Delete') }}
+            </button>
+          </div>
+        </div>
+      } @else if (!formOpen()) {
+        <div class="review-prompt">
+          <div>
+            <h3>
+              {{ t('ما رأيك في هذه الدورة؟', 'How was this course?') }}
+            </h3>
+
+            <p>
+              {{
+                t('شارك تجربتك مع الطلاب الآخرين.', 'Share your experience with other students.')
+              }}
+            </p>
+          </div>
+
+          <button type="button" class="primary-button" (click)="openCreate()">
+            {{ t('اكتب تقييماً', 'Write a Review') }}
+          </button>
+        </div>
+      }
+
+      <!-- CREATE / EDIT FORM -->
+      @if (formOpen()) {
+        <form class="review-form" #reviewForm="ngForm" (ngSubmit)="save()">
+          <h3>
+            {{
+              myReview() ? t('تعديل تقييمك', 'Edit Your Review') : t('إضافة تقييم', 'Add a Review')
+            }}
+          </h3>
+
+          <label class="field-label">
+            {{ t('عدد النجوم', 'Rating') }}
+          </label>
+
+          <div class="star-picker">
+            @for (star of stars; track star) {
+              <button
+                type="button"
+                [class.active]="star <= rating"
+                [attr.aria-label]="t('تقييم', 'Rating') + ' ' + star"
+                [attr.aria-pressed]="rating === star"
+                (click)="rating = star"
+              >
+                ★
+              </button>
+            }
+          </div>
+
+          <div class="review-field">
+            <label for="review-comment">
+              {{ t('تعليقك (اختياري)', 'Your Comment (Optional)') }}
+            </label>
+
+            <textarea
+              id="review-comment"
+              name="comment"
+              rows="4"
+              maxlength="1000"
+              [(ngModel)]="comment"
+              [placeholder]="
+                t('كيف كانت تجربتك مع الدورة؟', 'How was your experience with this course?')
+              "
+            >
+            </textarea>
+
+            <small> {{ comment.length }} / 1000 </small>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="saving() || reviewForm.invalid"
+            >
+              {{ saving() ? t('جاري الحفظ...', 'Saving...') : t('حفظ التقييم', 'Save Review') }}
+            </button>
+
+            <button type="button" class="secondary-button" (click)="closeForm()">
+              {{ t('إلغاء', 'Cancel') }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  } @else if (auth.currentUser()?.role === 'Student') {
+    <p class="enrollment-hint">
+      {{
+        t(
+          'يمكنك كتابة تقييم بعد التسجيل في الدورة.',
+          'You can write a review after enrolling in this course.'
+        )
+      }}
+    </p>
+  }
+
+  <!-- PUBLIC REVIEWS -->
+  @if (loading()) {
+    <div class="reviews-state">
+      {{ t('جاري تحميل التقييمات...', 'Loading reviews...') }}
+    </div>
+  } @else if (reviews().length === 0) {
+    <div class="reviews-state">
+      <h3>
+        {{ t('لا توجد تقييمات حتى الآن', 'No Reviews Yet') }}
+      </h3>
+
+      <p>
+        {{ t('كن أول من يشارك تجربته مع هذه الدورة.', 'Be the first to share your experience.') }}
+      </p>
+    </div>
+  } @else {
+    <div class="reviews-list">
+      @for (review of reviews(); track review.id) {
+        <article class="review-item">
+          <div class="review-author">
+            <div class="author-avatar">
+              {{ review.studentName.charAt(0) }}
+            </div>
+
+            <div class="author-details">
+              <strong>{{ review.studentName }}</strong>
+
+              <span>
+                {{ formatDate(review.createdAt) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="review-stars">
+            @for (star of stars; track star) {
+              <span [class.filled]="star <= review.rating"> ★ </span>
+            }
+          </div>
+
+          @if (review.comment) {
+            <p class="review-comment">
+              {{ review.comment }}
+            </p>
+          }
+        </article>
+      }
+    </div>
+
+    <!-- PAGINATION -->
+    @if (totalPages > 1) {
+      <div class="review-pagination">
+        <button type="button" [disabled]="pageNumber() === 1" (click)="previousPage()">
+          {{ t('السابق', 'Previous') }}
+        </button>
+
+        <span> {{ pageNumber() }} / {{ totalPages }} </span>
+
+        <button type="button" [disabled]="pageNumber() >= totalPages" (click)="nextPage()">
+          {{ t('التالي', 'Next') }}
+        </button>
+      </div>
+    }
+  }
+</section>

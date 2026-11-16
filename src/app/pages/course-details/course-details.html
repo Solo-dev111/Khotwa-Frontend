@@ -1,0 +1,291 @@
+<section class="details-page">
+  <a routerLink="/" class="back-link">
+    {{ t('العودة إلى الدورات', 'Back to Courses') }}
+  </a>
+
+  @if (error()) {
+    <div class="alert error">
+      {{ error() }}
+    </div>
+  }
+
+  @if (message()) {
+    <div class="alert success">
+      {{ message() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="page-state">
+      {{ t('جاري تحميل تفاصيل الدورة...', 'Loading course details...') }}
+    </div>
+  } @else if (course(); as course) {
+    <div class="course-layout">
+      <!-- MAIN COURSE INFORMATION -->
+      <div class="main-column">
+        <div class="course-cover">
+          @if (course.thumbnailUrl) {
+            <img [src]="course.thumbnailUrl" [alt]="course.title" />
+          } @else {
+            <div class="cover-placeholder">KHOTWA</div>
+          }
+        </div>
+
+        <div class="course-heading">
+          <div class="metadata">
+            <span>{{ course.categoryName }}</span>
+            <span>{{ language.levelName(course.level) }}</span>
+          </div>
+
+          <h1>{{ course.title }}</h1>
+
+          <p class="instructor-name">
+            {{ t('المدرب', 'Instructor') }}:
+            <strong>{{ course.instructorName }}</strong>
+          </p>
+        </div>
+
+        <section class="content-section">
+          <h2>
+            {{ t('عن هذه الدورة', 'About This Course') }}
+          </h2>
+
+          <p class="description">
+            {{ course.description }}
+          </p>
+        </section>
+
+        <!-- COURSE LESSONS -->
+        <section class="content-section">
+          <div class="section-heading">
+            <h2>
+              {{ t('محتوى الدورة', 'Course Content') }}
+            </h2>
+
+            <span class="lesson-count">
+              {{ lessons().length }}
+              {{ t('دروس', 'lessons') }}
+            </span>
+          </div>
+
+          @if (lessonsLoading()) {
+            <div class="page-state">
+              {{ t('جاري تحميل الدروس...', 'Loading lessons...') }}
+            </div>
+          } @else if (lessons().length === 0) {
+            <div class="page-state">
+              {{ t('لم يضف المدرب دروساً لهذه الدورة بعد.', 'No lessons have been added yet.') }}
+            </div>
+          } @else {
+            <div class="lesson-list">
+              @for (lesson of lessons(); track lesson.id) {
+                <div class="lesson-row">
+                  <div class="lesson-number">
+                    {{ lesson.sortOrder }}
+                  </div>
+
+                  <div class="lesson-info">
+                    <h3>{{ lesson.title }}</h3>
+
+                    @if (lesson.isPreview) {
+                      <span class="preview-label">
+                        {{ t('معاينة مجانية', 'Free Preview') }}
+                      </span>
+                    } @else {
+                      <span class="locked-label">
+                        {{ t('درس ضمن الدورة', 'Course Lesson') }}
+                      </span>
+                    }
+                  </div>
+
+                  <button
+                    type="button"
+                    class="lesson-button"
+                    [disabled]="!canViewLesson(lesson) || lessonLoading()"
+                    (click)="openLesson(lesson)"
+                  >
+                    @if (canViewLesson(lesson)) {
+                      {{ t('فتح الدرس', 'Open Lesson') }}
+                    } @else {
+                      {{ t('مقفل', 'Locked') }}
+                    }
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- SELECTED LESSON -->
+        @if (lessonLoading()) {
+          <section class="content-section">
+            <div class="page-state">
+              {{ t('جاري فتح الدرس...', 'Opening lesson...') }}
+            </div>
+          </section>
+        }
+
+        @if (lessonError()) {
+          <div class="alert error">
+            {{ lessonError() }}
+          </div>
+        }
+
+        @if (selectedLesson(); as lesson) {
+          <section class="content-section lesson-viewer">
+            <div class="lesson-viewer-header">
+              <span class="section-label">
+                {{ t('الدرس المختار', 'SELECTED LESSON') }}
+              </span>
+
+              <button type="button" class="close-lesson" (click)="selectedLesson.set(null)">
+                ✕
+              </button>
+            </div>
+
+            <h2>{{ lesson.title }}</h2>
+
+            @if (lesson.content) {
+              <p class="lesson-content">
+                {{ lesson.content }}
+              </p>
+            }
+
+            @if (videoLink(lesson.videoUrl); as url) {
+              <div class="video-section">
+                @if (url.toLowerCase().includes('.mp4')) {
+                  <video controls preload="metadata" [src]="url"></video>
+                } @else {
+                  <a class="video-link" [href]="url" target="_blank" rel="noopener noreferrer">
+                    {{ t('فتح فيديو الدرس', 'Open Lesson Video') }}
+                  </a>
+                }
+              </div>
+            }
+
+            @if (!lesson.content && !lesson.videoUrl) {
+              <p class="muted">
+                {{ t('لا يوجد محتوى لهذا الدرس حالياً.', 'This lesson has no content yet.') }}
+              </p>
+            }
+          </section>
+        }
+      </div>
+
+      <!-- COURSE REVIEWS -->
+      <app-course-reviews
+        [courseId]="course.id"
+        [canWrite]="auth.currentUser()?.role === 'Student' && enrolled()"
+      >
+      </app-course-reviews>
+
+      <!-- PURCHASE / ENROLLMENT PANEL -->
+      <aside class="purchase-panel">
+        <span class="purchase-label">
+          {{ t('سعر الدورة', 'Course Price') }}
+        </span>
+
+        <div class="price">
+          @if (course.price === 0) {
+            {{ t('مجاني', 'Free') }}
+          } @else {
+            {{ course.price }} USD
+          }
+        </div>
+
+        <div class="purchase-divider"></div>
+
+        <div class="course-facts">
+          <div>
+            <span>{{ t('المستوى', 'Level') }}</span>
+            <strong>
+              {{ language.levelName(course.level) }}
+            </strong>
+          </div>
+
+          <div>
+            <span>{{ t('عدد الدروس', 'Lessons') }}</span>
+            <strong>{{ course.lessonCount }}</strong>
+          </div>
+
+          <div>
+            <span>{{ t('التصنيف', 'Category') }}</span>
+            <strong>{{ course.categoryName }}</strong>
+          </div>
+        </div>
+
+        <div class="purchase-divider"></div>
+
+        <!-- LOGGED OUT -->
+        @if (!auth.currentUser()) {
+          <p class="purchase-note">
+            {{ t('سجّل الدخول للالتحاق بهذه الدورة.', 'Sign in to enroll in this course.') }}
+          </p>
+
+          <a routerLink="/login" class="purchase-button">
+            {{ t('تسجيل الدخول', 'Sign In') }}
+          </a>
+        }
+
+        <!-- STUDENT -->
+        @else if (auth.currentUser()?.role === 'Student') {
+          @if (checkingEnrollment()) {
+            <p class="purchase-note">
+              {{ t('جاري التحقق من تسجيلك...', 'Checking enrollment...') }}
+            </p>
+          } @else if (enrolled()) {
+            <div class="enrolled-state">
+              ✓ {{ t('أنت مسجل في هذه الدورة', 'You are enrolled in this course') }}
+            </div>
+
+            <p class="purchase-note">
+              {{ t('يمكنك الآن فتح دروس الدورة من القائمة.', 'You can now open course lessons.') }}
+            </p>
+          } @else {
+            <button
+              type="button"
+              class="purchase-button"
+              [disabled]="busy()"
+              (click)="enrollOrBuy()"
+            >
+              @if (busy()) {
+                {{ t('جاري التنفيذ...', 'Processing...') }}
+              } @else if (course.price === 0) {
+                {{ t('التسجيل مجاناً', 'Enroll for Free') }}
+              } @else {
+                {{ t('شراء الدورة', 'Buy Course') }}
+              }
+            </button>
+
+            @if (course.price > 0) {
+              <p class="purchase-note">
+                {{
+                  t(
+                    'عملية شراء تجريبية، دون دفع أموال حقيقية.',
+                    'Demo purchase. No real payment required.'
+                  )
+                }}
+              </p>
+            }
+          }
+        }
+
+        <!-- INSTRUCTOR / ADMIN -->
+        @else {
+          <p class="purchase-note">
+            {{
+              t(
+                'التسجيل والشراء متاحان لحسابات الطلاب.',
+                'Enrollment and purchases are available to students.'
+              )
+            }}
+          </p>
+        }
+      </aside>
+    </div>
+  } @else {
+    <div class="page-state">
+      {{ t('تعذر عرض الدورة المطلوبة.', 'Could not display this course.') }}
+    </div>
+  }
+</section>

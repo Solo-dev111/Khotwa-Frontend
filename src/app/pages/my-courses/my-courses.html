@@ -1,0 +1,197 @@
+<section class="my-courses-page">
+  <!-- PAGE HEADER -->
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">STUDENT / LEARNING</p>
+
+      <h1>
+        {{ t('دوراتي التعليمية', 'My Courses') }}
+      </h1>
+
+      <p class="subtitle">
+        {{
+          t(
+            'تابع تعلمك واستكمل الدورات التي التحقت بها.',
+            'Continue learning and manage your enrolled courses.'
+          )
+        }}
+      </p>
+    </div>
+
+    <a routerLink="/" class="browse-link">
+      {{ t('استكشف دورات أخرى', 'Explore Courses') }}
+    </a>
+  </div>
+
+  <!-- NOT LOGGED IN -->
+  @if (!auth.currentUser()) {
+    <div class="empty-state">
+      <h2>{{ t('سجّل الدخول أولاً', 'Sign in first') }}</h2>
+
+      <p>
+        {{
+          t(
+            'سجّل الدخول بحساب الطالب لعرض دوراتك.',
+            'Sign in with your student account to view your courses.'
+          )
+        }}
+      </p>
+
+      <a routerLink="/login" class="primary-button">
+        {{ t('تسجيل الدخول', 'Sign In') }}
+      </a>
+    </div>
+  }
+
+  <!-- WRONG ROLE -->
+  @else if (auth.currentUser()?.role !== 'Student') {
+    <div class="empty-state">
+      <h2>{{ t('هذه الصفحة للطلاب', 'Student Area') }}</h2>
+
+      <p>
+        {{
+          t(
+            'يجب تسجيل الدخول بحساب طالب لعرض هذه الصفحة.',
+            'You need a student account to access this page.'
+          )
+        }}
+      </p>
+    </div>
+  }
+
+  <!-- LOADING -->
+  @else if (loading()) {
+    <div class="empty-state">
+      {{ t('جاري تحميل دوراتك...', 'Loading your courses...') }}
+    </div>
+  }
+
+  <!-- ERROR -->
+  @else if (error()) {
+    <div class="error-state">
+      <p>{{ error() }}</p>
+
+      <button type="button" class="primary-button" (click)="loadCourses(pageNumber())">
+        {{ t('إعادة المحاولة', 'Try Again') }}
+      </button>
+    </div>
+  }
+
+  <!-- EMPTY -->
+  @else if (enrollments().length === 0) {
+    <div class="empty-state">
+      <div class="empty-mark">K.</div>
+
+      <h2>
+        {{ t('لم تلتحق بأي دورة بعد', 'No courses yet') }}
+      </h2>
+
+      <p>
+        {{
+          t(
+            'ابدأ رحلتك التعليمية باستكشاف الدورات المتاحة.',
+            'Start your learning journey by exploring available courses.'
+          )
+        }}
+      </p>
+
+      <a routerLink="/" class="primary-button">
+        {{ t('استكشف الدورات', 'Explore Courses') }}
+      </a>
+    </div>
+  }
+
+  <!-- COURSE LIST -->
+  @else {
+    <div class="results-heading">
+      <div>
+        <span class="eyebrow">YOUR LEARNING</span>
+        <h2>{{ t('الدورات المسجل بها', 'Enrolled Courses') }}</h2>
+      </div>
+
+      <span class="total-count">
+        {{ totalCount() }}
+        {{ t('دورة', 'courses') }}
+      </span>
+    </div>
+
+    <div class="courses-grid">
+      @for (enrollment of enrollments(); track enrollment.id) {
+        <article class="enrollment-card">
+          <!-- VISUAL -->
+          <div class="course-visual">
+            <span class="visual-brand">خُطوة.</span>
+
+            <span class="visual-number"> COURSE / {{ enrollment.courseId }} </span>
+
+            <span class="visual-decoration"></span>
+          </div>
+
+          <!-- INFORMATION -->
+          <div class="card-body">
+            <div class="card-topline">
+              <span class="status" [class.completed]="enrollment.isCompleted">
+                @if (enrollment.isCompleted) {
+                  {{ t('مكتملة', 'Completed') }}
+                } @else {
+                  {{ t('قيد التعلم', 'In Progress') }}
+                }
+              </span>
+            </div>
+
+            <h3>{{ enrollment.courseTitle }}</h3>
+
+            <div class="course-information">
+              <div>
+                <span>{{ t('تاريخ التسجيل', 'Enrolled on') }}</span>
+                <strong>
+                  {{ formatDate(enrollment.enrolledAt) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>{{ t('رقم الدورة', 'Course ID') }}</span>
+                <strong>#{{ enrollment.courseId }}</strong>
+              </div>
+            </div>
+
+            <a [routerLink]="['/courses', enrollment.courseId]" class="continue-button">
+              @if (enrollment.isCompleted) {
+                {{ t('عرض الدورة', 'View Course') }}
+              } @else {
+                {{ t('متابعة التعلم', 'Continue Learning') }}
+              }
+
+              <span>←</span>
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+
+    <!-- PAGINATION -->
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          type="button"
+          class="page-button"
+          [disabled]="pageNumber() === 1"
+          (click)="previousPage()"
+        >
+          {{ t('السابق', 'Previous') }}
+        </button>
+
+        <span> {{ pageNumber() }} / {{ totalPages() }} </span>
+
+        <button
+          type="button"
+          class="page-button"
+          [disabled]="pageNumber() >= totalPages()"
+          (click)="nextPage()"
+        >
+          {{ t('التالي', 'Next') }}
+        </button>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,107 @@
+<section class="auth-layout">
+  <div class="auth-intro">
+    <span class="auth-eyebrow">KHOTWA / GET STARTED</span>
+
+    <h1>{{ language.text('registerTitle') }}</h1>
+
+    <p>{{ language.text('registerDescription') }}</p>
+
+    <div class="auth-intro-footer">LEARN. CREATE. GROW.</div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <span>02 / ACCOUNT</span>
+      <h2>{{ language.text('register') }}</h2>
+    </div>
+
+    <form #registerForm="ngForm" (ngSubmit)="submit()">
+      <div class="auth-field">
+        <label for="full-name">
+          {{ language.text('fullName') }}
+        </label>
+
+        <input
+          id="full-name"
+          type="text"
+          name="fullName"
+          [(ngModel)]="fullName"
+          autocomplete="name"
+          required
+          maxlength="100"
+        />
+      </div>
+
+      <div class="auth-field">
+        <label for="register-email">
+          {{ language.text('email') }}
+        </label>
+
+        <input
+          id="register-email"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          autocomplete="email"
+          required
+          email
+        />
+      </div>
+
+      <div class="auth-field">
+        <label for="register-password">
+          {{ language.text('password') }}
+        </label>
+
+        <input
+          id="register-password"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          autocomplete="new-password"
+          required
+          minlength="8"
+        />
+
+        <small>{{ language.text('passwordHint') }}</small>
+      </div>
+
+      <div class="auth-field">
+        <label for="account-role">
+          {{ language.text('accountType') }}
+        </label>
+
+        <select id="account-role" name="role" [(ngModel)]="role">
+          <option value="student">
+            {{ language.text('student') }}
+          </option>
+
+          <option value="instructor">
+            {{ language.text('instructorRole') }}
+          </option>
+        </select>
+      </div>
+
+      @if (error()) {
+        <p class="auth-error">
+          {{ language.text(error()!) }}
+        </p>
+      }
+
+      <button class="auth-submit" type="submit" [disabled]="registerForm.invalid || loading()">
+        @if (loading()) {
+          {{ language.text('registering') }}
+        } @else {
+          {{ language.text('createAccount') }}
+        }
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ language.text('haveAccount') }}
+      <a routerLink="/login">
+        {{ language.text('login') }}
+      </a>
+    </p>
+  </div>
+</section>
