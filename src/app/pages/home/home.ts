@@ -128,4 +128,10 @@ export class Home {
     this.categoryId = this.categoryId === categoryId ? null : categoryId;
     this.applyFilters();
   }
+  useFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith('/images/course-cover.svg')) {
+      image.src = '/images/course-cover.svg';
+    }
+  }
 }

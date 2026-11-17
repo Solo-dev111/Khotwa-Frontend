@@ -276,4 +276,10 @@ export class CourseDetails {
       ));
     }
   }
+  useFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith('/images/course-cover.svg')) {
+      image.src = '/images/course-cover.svg';
+    }
+  }
 }

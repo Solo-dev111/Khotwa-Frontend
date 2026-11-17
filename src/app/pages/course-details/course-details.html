@@ -25,9 +25,9 @@
       <div class="main-column">
         <div class="course-cover">
           @if (course.thumbnailUrl) {
-            <img [src]="course.thumbnailUrl" [alt]="course.title" />
+            <img [src]="course.thumbnailUrl" [alt]="course.title" (error)="useFallback($event)" />
           } @else {
-            <div class="cover-placeholder"><span>{{ course.categoryName }}</span><strong>{{ course.title }}</strong></div>
+            <img src="/images/course-cover.svg" alt="" />
           }
         </div>
 
@@ -227,7 +227,7 @@
             {{ t('سجّل الدخول للالتحاق بهذه الدورة.', 'Sign in to enroll in this course.') }}
           </p>
 
-          <a routerLink="/login" class="purchase-button">
+          <a routerLink="/login" [queryParams]="{ returnUrl: '/courses/' + course.id }" class="purchase-button">
             {{ t('تسجيل الدخول', 'Sign In') }}
           </a>
         }
