@@ -154,6 +154,17 @@ export class LanguageService {
     return translations[this.current()][key];
   }
 
+  formatCurrency(value: number): string {
+    const amount = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 2
+    }).format(value);
+    return this.current() === 'ar' ? `${amount} ر.ي` : `${amount} YER`;
+  }
+
+  currencyLabel(): string {
+    return this.current() === 'ar' ? 'ر.ي' : 'YER';
+  }
+
   setLanguage(language: Language): void {
     this.current.set(language);
 

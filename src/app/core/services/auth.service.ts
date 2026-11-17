@@ -3,11 +3,14 @@ import {
   Injectable,
   inject,
   signal,
-  afterNextRender
+  afterNextRender,
+  PLATFORM_ID
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 export type RegisterRole = 'student' | 'instructor';
 
@@ -32,29 +35,49 @@ export interface RegisterRequest {
 export class AuthService {
 
   private http = inject(HttpClient);
+  private platformId = inject(PLATFORM_ID);
 
-  private apiUrl = 'https://localhost:7194/api/Auth';
+  private apiUrl = `${API_BASE_URL}/Auth`;
+  private sessionRestored = false;
 
   currentUser = signal<AuthResponse | null>(null);
 
   constructor() {
     afterNextRender(() => {
-      const saved = localStorage.getItem('khotwa_auth');
-
-      if (!saved) return;
-
-      try {
-        const user: AuthResponse = JSON.parse(saved);
-
-        if (new Date(user.expiresAt).getTime() > Date.now()) {
-          this.currentUser.set(user);
-        } else {
-          this.logout();
-        }
-      } catch {
-        this.logout();
-      }
+      this.restoreSession();
     });
+  }
+
+  /** Restore the browser session synchronously before a protected route is checked. */
+  restoreSession(): AuthResponse | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    if (this.sessionRestored) {
+      const current = this.currentUser();
+      if (current && new Date(current.expiresAt).getTime() <= Date.now()) {
+        this.logout();
+        return null;
+      }
+      return current;
+    }
+
+    this.sessionRestored = true;
+    const saved = localStorage.getItem('khotwa_auth');
+    if (!saved) return null;
+
+    try {
+      const user = JSON.parse(saved) as AuthResponse;
+      const expiry = new Date(user.expiresAt).getTime();
+
+      if (user.token && Number.isFinite(expiry) && expiry > Date.now()) {
+        this.currentUser.set(user);
+        return user;
+      }
+    } catch {
+      // Invalid session data is discarded below.
+    }
+
+    this.logout();
+    return null;
   }
 
   // LOGIN
@@ -87,6 +110,7 @@ export class AuthService {
 
   // SAVE USER
   private saveSession(user: AuthResponse): void {
+    this.sessionRestored = true;
     this.currentUser.set(user);
 
     localStorage.setItem(
@@ -97,6 +121,7 @@ export class AuthService {
 
   // LOGOUT
   logout(): void {
+    this.sessionRestored = true;
     this.currentUser.set(null);
 
     if (typeof localStorage !== 'undefined') {

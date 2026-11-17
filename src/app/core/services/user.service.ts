@@ -5,6 +5,7 @@ import {
   HttpParams
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 export type UserRole = 'Student' | 'Instructor' | 'Admin';
 
@@ -42,7 +43,7 @@ export interface UpdateUser {
 export class UserService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'https://localhost:7194/api/Users';
+  private apiUrl = `${API_BASE_URL}/Users`;
 
   getAll(
     search = '',

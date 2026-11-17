@@ -16,7 +16,7 @@
   }
 
   @if (loading()) {
-    <div class="page-state">
+    <div class="page-state detail-loading" role="status" aria-live="polite" aria-busy="true">
       {{ t('جاري تحميل تفاصيل الدورة...', 'Loading course details...') }}
     </div>
   } @else if (course(); as course) {
@@ -27,7 +27,7 @@
           @if (course.thumbnailUrl) {
             <img [src]="course.thumbnailUrl" [alt]="course.title" />
           } @else {
-            <div class="cover-placeholder">KHOTWA</div>
+            <div class="cover-placeholder"><span>{{ course.categoryName }}</span><strong>{{ course.title }}</strong></div>
           }
         </div>
 
@@ -43,6 +43,12 @@
             {{ t('المدرب', 'Instructor') }}:
             <strong>{{ course.instructorName }}</strong>
           </p>
+          <div class="overview-facts">
+            <span>{{ t('عدد الدروس', 'Lessons') }} <strong>{{ course.lessonCount }}</strong></span>
+            @if (course.averageRating != null && course.reviewCount) {
+              <span>★ {{ course.averageRating | number:'1.1-1' }} <small>({{ course.reviewCount }})</small></span>
+            }
+          </div>
         </div>
 
         <section class="content-section">
@@ -126,7 +132,7 @@
         }
 
         @if (lessonError()) {
-          <div class="alert error">
+          <div class="alert error" role="alert">
             {{ lessonError() }}
           </div>
         }
@@ -170,14 +176,13 @@
             }
           </section>
         }
+        <app-course-reviews
+          class="course-reviews"
+          [courseId]="course.id"
+          [canWrite]="auth.currentUser()?.role === 'Student' && enrolled()"
+        >
+        </app-course-reviews>
       </div>
-
-      <!-- COURSE REVIEWS -->
-      <app-course-reviews
-        [courseId]="course.id"
-        [canWrite]="auth.currentUser()?.role === 'Student' && enrolled()"
-      >
-      </app-course-reviews>
 
       <!-- PURCHASE / ENROLLMENT PANEL -->
       <aside class="purchase-panel">
@@ -189,7 +194,7 @@
           @if (course.price === 0) {
             {{ t('مجاني', 'Free') }}
           } @else {
-            {{ course.price }} USD
+            {{ language.formatCurrency(course.price) }}
           }
         </div>
 

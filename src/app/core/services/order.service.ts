@@ -2,8 +2,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
-const API_URL = 'https://localhost:7194/api';
+const API_URL = API_BASE_URL;
 
 export type OrderStatus =
   | 'Pending'

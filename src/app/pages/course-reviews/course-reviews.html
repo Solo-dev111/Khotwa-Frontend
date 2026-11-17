@@ -159,8 +159,15 @@
 
   <!-- PUBLIC REVIEWS -->
   @if (loading()) {
-    <div class="reviews-state">
+    <div class="reviews-state loading-reviews" role="status" aria-live="polite" aria-busy="true">
       {{ t('جاري تحميل التقييمات...', 'Loading reviews...') }}
+    </div>
+  } @else if (error() && reviews().length === 0) {
+    <div class="reviews-state" role="alert">
+      <h3>{{ error() }}</h3>
+      <button type="button" (click)="loadReviews(pageNumber())">
+        {{ language.text('retry') }}
+      </button>
     </div>
   } @else if (reviews().length === 0) {
     <div class="reviews-state">

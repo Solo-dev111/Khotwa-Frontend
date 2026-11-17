@@ -15,6 +15,7 @@ import { Lessons } from './pages/instructor/lessons/lessons';
 
 import { CourseDetails } from './pages/course-details/course-details';
 import { MyCourses } from './pages/my-courses/my-courses';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
 
@@ -40,24 +41,32 @@ export const routes: Routes = [
   {
     path: 'admin/categories',
     component: Categories,
+    canActivate: [roleGuard],
+    data: { roles: ['Admin'] },
     title: 'Khotwa - Categories'
   },
 
   {
     path: 'admin/users',
     component: Users,
+    canActivate: [roleGuard],
+    data: { roles: ['Admin'] },
     title: 'Khotwa - Manage Users'
   },
 
   {
     path: 'admin/courses',
     component: AdminCourses,
+    canActivate: [roleGuard],
+    data: { roles: ['Admin'] },
     title: 'Khotwa - Manage Courses'
   },
 
   {
     path: 'admin/orders',
     component: Orders,
+    canActivate: [roleGuard],
+    data: { roles: ['Admin'] },
     title: 'Khotwa - Manage Orders'
   },
 
@@ -65,18 +74,22 @@ export const routes: Routes = [
   {
     path: 'instructor/courses',
     component: Courses,
+    canActivate: [roleGuard],
+    data: { roles: ['Instructor'] },
     title: 'Khotwa - Instructor Courses'
   },
 
   {
     path: 'instructor/lessons',
-    component: Lessons,
-    title: 'Khotwa - Instructor Lessons'
+    redirectTo: 'instructor/courses',
+    pathMatch: 'full'
   },
 
   {
     path: 'instructor/courses/:courseId/lessons',
     component: Lessons,
+    canActivate: [roleGuard],
+    data: { roles: ['Instructor', 'Admin'] },
     title: 'Khotwa - Course Lessons'
   },
 
@@ -90,6 +103,8 @@ export const routes: Routes = [
   {
     path: 'my-courses',
     component: MyCourses,
+    canActivate: [roleGuard],
+    data: { roles: ['Student'] },
     title: 'Khotwa - My Courses'
   },
 

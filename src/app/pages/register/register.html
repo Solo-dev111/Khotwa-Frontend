@@ -1,17 +1,15 @@
 <section class="auth-layout">
   <div class="auth-intro">
-    <span class="auth-eyebrow">KHOTWA / GET STARTED</span>
+    <span class="auth-wordmark">{{ language.text('brand') }}.</span>
 
     <h1>{{ language.text('registerTitle') }}</h1>
 
     <p>{{ language.text('registerDescription') }}</p>
 
-    <div class="auth-intro-footer">LEARN. CREATE. GROW.</div>
   </div>
 
   <div class="auth-card">
     <div class="auth-card-header">
-      <span>02 / ACCOUNT</span>
       <h2>{{ language.text('register') }}</h2>
     </div>
 
@@ -40,6 +38,7 @@
         <input
           id="register-email"
           type="email"
+          dir="ltr"
           name="email"
           [(ngModel)]="email"
           autocomplete="email"
@@ -56,6 +55,7 @@
         <input
           id="register-password"
           type="password"
+          dir="ltr"
           name="password"
           [(ngModel)]="password"
           autocomplete="new-password"
@@ -83,7 +83,7 @@
       </div>
 
       @if (error()) {
-        <p class="auth-error">
+        <p class="auth-error" role="alert">
           {{ language.text(error()!) }}
         </p>
       }

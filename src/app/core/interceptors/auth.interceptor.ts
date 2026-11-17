@@ -2,6 +2,10 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
+import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
@@ -11,45 +15,35 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
   // Only attach JWT to our ASP.NET Core API
-  if (!req.url.startsWith('https://localhost:7194/api/')) {
+  if (!req.url.startsWith(`${API_BASE_URL}/`)) {
     return next(req);
   }
 
-  const saved = localStorage.getItem('khotwa_auth');
-
-  if (!saved) {
-    console.log('Auth Interceptor: No session');
-    return next(req);
-  }
-
-  try {
-    const session = JSON.parse(saved);
-
-    const valid =
-      !!session.token &&
-      new Date(session.expiresAt).getTime() > Date.now();
-
-    console.log('Auth Interceptor:', {
-      url: req.url,
-      method: req.method,
-      tokenAttached: valid
-    });
-
-    if (!valid) {
-      return next(req);
-    }
-
-    const authenticatedRequest = req.clone({
+  const session = auth.restoreSession();
+  const authenticatedRequest = session
+    ? req.clone({
       setHeaders: {
         Authorization: `Bearer ${session.token}`
       }
-    });
+    })
+    : req;
 
-    return next(authenticatedRequest);
+  return next(authenticatedRequest).pipe(
+    catchError(error => {
+      const isLoginRequest = req.url.endsWith('/Auth/login');
+      if (error.status === 401 && session && !isLoginRequest) {
+        const returnUrl = router.url;
+        auth.logout();
+        void router.navigate(['/login'], {
+          queryParams: { returnUrl }
+        });
+      }
 
-  } catch (error) {
-    console.error('Auth Interceptor Error:', error);
-    return next(req);
-  }
+      return throwError(() => error);
+    })
+  );
 };

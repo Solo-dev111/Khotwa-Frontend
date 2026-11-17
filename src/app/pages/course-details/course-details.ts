@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import { DecimalPipe } from '@angular/common';
 import { CourseReviews } from '../course-reviews/course-reviews';
 
 import {
@@ -35,7 +36,7 @@ import {
 
 @Component({
   selector: 'app-course-details',
- imports: [RouterLink, CourseReviews],
+ imports: [RouterLink, CourseReviews, DecimalPipe],
   templateUrl: './course-details.html',
   styleUrl: './course-details.css'
 })

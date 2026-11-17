@@ -412,20 +412,7 @@ export class Orders {
 
   // FORMAT AMOUNT
   formatAmount(value: number): string {
-
-    return value.toLocaleString(
-
-      this.language.current() === 'ar'
-        ? 'ar'
-        : 'en-US',
-
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }
-
-    );
-
+    return this.language.formatCurrency(value);
   }
 
   // ERROR HANDLING

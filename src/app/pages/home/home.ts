@@ -1,4 +1,5 @@
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 
 import {
   Component,
@@ -19,7 +20,7 @@ import {
 
 @Component({
   selector: 'app-home',
-imports: [FormsModule, RouterLink],
+imports: [FormsModule, RouterLink, DecimalPipe],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -27,6 +28,7 @@ export class Home {
 
   language = inject(LanguageService);
   private courseService = inject(CourseService);
+  private route = inject(ActivatedRoute);
 
   // Reactive data
   courses = signal<Course[]>([]);
@@ -52,7 +54,12 @@ export class Home {
     // Runs in browser after the initial render
     afterNextRender(() => {
       this.loadCategories();
-      this.loadCourses();
+      this.route.queryParamMap.subscribe(params => {
+        const query = params.get('search');
+        if (query !== null) this.search = query;
+        this.pageNumber = 1;
+        this.loadCourses();
+      });
     });
   }
 
@@ -115,5 +122,10 @@ export class Home {
 
     this.pageNumber = page;
     this.loadCourses();
+  }
+
+  selectCategory(categoryId: number): void {
+    this.categoryId = this.categoryId === categoryId ? null : categoryId;
+    this.applyFilters();
   }
 }

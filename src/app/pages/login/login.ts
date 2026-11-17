@@ -1,7 +1,7 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -17,6 +17,7 @@ export class Login {
   auth = inject(AuthService);
   language = inject(LanguageService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   email = '';
   password = '';
@@ -35,7 +36,11 @@ export class Login {
     this.auth.login(this.email.trim(), this.password).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigateByUrl('/');
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        const safeReturnUrl = returnUrl?.startsWith('/') && !returnUrl.startsWith('//')
+          ? returnUrl
+          : '/';
+        this.router.navigateByUrl(safeReturnUrl);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);

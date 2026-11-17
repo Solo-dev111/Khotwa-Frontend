@@ -1,23 +1,66 @@
-
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+  --paper: #f7f6f2;
+  --surface: #fffefa;
+  --surface-soft: #eeeee7;
+  --ink: #202823;
+  --ink-soft: #455048;
+  --muted: #747b72;
+  --line: #dcded5;
+  --forest: #28372f;
+  --forest-light: #405548;
+  --clay: #a9563e;
+  --clay-dark: #88412f;
+  --sage: #dce3d8;
+  --gold: #a9824d;
+  --danger: #9a4035;
+  --success: #426a4a;
+  --content-width: 1320px;
+}
 
 * {
   box-sizing: border-box;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 24px;
 }
 
 body {
   margin: 0;
+  background: var(--paper);
+  color: var(--ink);
   font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
-  background: #f7f6f2;
-  color: #212722;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -26,4 +69,25 @@ button {
 
 a {
   color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--paper);
+  background: var(--forest);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }

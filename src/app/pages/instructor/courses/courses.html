@@ -131,7 +131,7 @@
           <!-- PRICE -->
           <div class="field">
             <label for="price">
-              {{ t('السعر بالدولار', 'Price (USD)') }}
+              {{ t('السعر (ر.ي)', 'Price (YER)') }}
             </label>
 
             <input
@@ -324,7 +324,7 @@
               </p>
 
               <strong>
-                {{ course.price === 0 ? language.text('free') : course.price + ' USD' }}
+                {{ course.price === 0 ? language.text('free') : language.formatCurrency(course.price) }}
               </strong>
             </div>
 

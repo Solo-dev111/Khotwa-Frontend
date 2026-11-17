@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 import { Course } from './course.service';
 
@@ -36,7 +37,7 @@ export class LessonService {
 
   private http = inject(HttpClient);
 
-  private apiUrl = 'https://localhost:7194/api';
+  private apiUrl = API_BASE_URL;
 
   // Get course information
   getCourse(courseId: number): Observable<Course> {

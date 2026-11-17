@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 import {
   Course,
@@ -31,7 +32,7 @@ export interface InstructorCourseFilters {
 export class InstructorCourseService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'https://localhost:7194/api';
+  private apiUrl = API_BASE_URL;
 
   // GET: Instructor's own courses
   getMine(

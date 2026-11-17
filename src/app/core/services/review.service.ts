@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 export interface Review {
   id: number;
@@ -38,7 +39,7 @@ export interface UpdateReview {
 export class ReviewService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'https://localhost:7194/api/Reviews';
+  private apiUrl = `${API_BASE_URL}/Reviews`;
 
   // Public: Reviews of a course
   getByCourse(

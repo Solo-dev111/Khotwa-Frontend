@@ -1,238 +1,130 @@
-<section class="hero">
-  <div class="hero-inner">
+<div class="home-page">
+  <section class="hero" aria-labelledby="home-title">
     <div class="hero-copy">
-      <span class="eyebrow"> KHOTWA / LEARNING PLATFORM </span>
-
-      <h1>{{ language.text('headline') }}</h1>
-
-      <p>{{ language.text('introduction') }}</p>
-
-      <a href="#catalog" class="explore-link">
-        {{ language.text('catalog') }}
-        <span aria-hidden="true">↓</span>
-      </a>
+      <p class="eyebrow">{{ language.text('brand') }} <span></span> {{ language.text('catalog') }}</p>
+      <h1 id="home-title">{{ language.current() === 'ar' ? 'تعلّم مهارة جديدة،' : 'Learn a new skill,' }}<br />{{ language.current() === 'ar' ? 'واخطُ نحو مستقبلك' : 'move toward your future' }}</h1>
+      <p class="hero-description">{{ language.text('introduction') }}</p>
+      <form class="hero-search" (ngSubmit)="applyFilters()">
+        <label class="visually-hidden" for="hero-search">{{ language.text('search') }}</label>
+        <input id="hero-search" type="search" name="heroSearch" [(ngModel)]="search" [placeholder]="language.text('search')" />
+        <button type="submit">{{ language.text('apply') }}</button>
+      </form>
     </div>
-
-    <div class="hero-decoration" aria-hidden="true">
-      <span>خطوة</span>
-      <div class="decoration-line"></div>
-      <small>LEARN / BUILD / GROW</small>
-    </div>
-  </div>
-</section>
-
-<!-- COURSES SECTION -->
-
-<section class="catalog" id="catalog">
-  <div class="section-heading">
-    <div>
-      <span class="section-label"> 01 / COURSES </span>
-
-      <h2>{{ language.text('catalog') }}</h2>
-
-      <p>{{ language.text('catalogDescription') }}</p>
-    </div>
-  </div>
-
-  <!-- SEARCH AND FILTERS -->
-
-  <form class="filters" (ngSubmit)="applyFilters()">
-    <!-- Search -->
-    <div class="filter-field search-field">
-      <label for="course-search">
-        {{ language.text('courses') }}
-      </label>
-
-      <input
-        id="course-search"
-        type="search"
-        name="search"
-        [(ngModel)]="search"
-        [placeholder]="language.text('search')"
-      />
-    </div>
-
-    <!-- Category -->
-    <div class="filter-field">
-      <label for="category">
-        {{ language.text('category') }}
-      </label>
-
-      <select id="category" name="category" [(ngModel)]="categoryId">
-        <option [ngValue]="null">
-          {{ language.text('allCategories') }}
-        </option>
-
-        @for (category of categories(); track category.id) {
-          <option [ngValue]="category.id">
-            {{ category.name }}
-          </option>
+    <div class="hero-image">
+      @if (courses()[0]; as featured) {
+        @if (featured.thumbnailUrl) {
+          <img [src]="featured.thumbnailUrl" [alt]="featured.title" fetchpriority="high" />
+        } @else {
+          <div class="hero-image-fallback" aria-hidden="true"></div>
         }
-      </select>
-    </div>
-
-    <!-- Level -->
-    <div class="filter-field">
-      <label for="level">
-        {{ language.text('level') }}
-      </label>
-
-      <select id="level" name="level" [(ngModel)]="level">
-        <option value="">
-          {{ language.text('allLevels') }}
-        </option>
-
-        <option value="Beginner">
-          {{ language.text('beginner') }}
-        </option>
-
-        <option value="Intermediate">
-          {{ language.text('intermediate') }}
-        </option>
-
-        <option value="Advanced">
-          {{ language.text('advanced') }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Minimum Price -->
-    <div class="filter-field price-field">
-      <label for="min-price">
-        {{ language.text('minPrice') }}
-      </label>
-
-      <input id="min-price" type="number" name="minPrice" min="0" [(ngModel)]="minPrice" />
-    </div>
-
-    <!-- Maximum Price -->
-    <div class="filter-field price-field">
-      <label for="max-price">
-        {{ language.text('maxPrice') }}
-      </label>
-
-      <input id="max-price" type="number" name="maxPrice" min="0" [(ngModel)]="maxPrice" />
-    </div>
-
-    <!-- Filter Buttons -->
-    <div class="filter-actions">
-      <button class="primary-button" type="submit">
-        {{ language.text('apply') }}
-      </button>
-
-      <button class="reset-button" type="button" (click)="resetFilters()">
-        {{ language.text('reset') }}
-      </button>
-    </div>
-  </form>
-
-  <!-- LOADING STATE -->
-
-  @if (loading()) {
-    <div class="state-message">
-      {{ language.text('loading') }}
-    </div>
-  }
-
-  <!-- ERROR STATE -->
-
-  @else if (error()) {
-    <div class="state-message">
-      <p>{{ language.text('error') }}</p>
-
-      <button type="button" (click)="loadCourses()">
-        {{ language.text('retry') }}
-      </button>
-    </div>
-  }
-
-  <!-- EMPTY STATE -->
-
-  @else if (courses().length === 0) {
-    <div class="state-message">
-      {{ language.text('empty') }}
-    </div>
-  }
-
-  <!-- COURSES LIST -->
-
-  @else {
-    <div class="results-count">{{ totalCount() }} {{ language.text('result') }}</div>
-
-    <div class="course-grid">
-      @for (course of courses(); track course.id) {
-        <a class="course-card" [routerLink]="['/courses', course.id]">
-          <!-- Course Image -->
-          <div class="course-image">
-            @if (course.thumbnailUrl) {
-              <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" />
-            } @else {
-              <div class="image-placeholder">
-                <span>KHOTWA</span>
-              </div>
-            }
-          </div>
-
-          <!-- Course Information -->
-          <div class="course-content">
-            <div class="course-meta">
-              <span>{{ course.categoryName }}</span>
-
-              <span>
-                {{ language.levelName(course.level) }}
-              </span>
-            </div>
-
-            <h3>{{ course.title }}</h3>
-
-            <p class="instructor">
-              {{ language.text('instructor') }}:
-              {{ course.instructorName }}
-            </p>
-
-            <!-- Price and Lessons -->
-            <div class="course-bottom">
-              <span class="lesson-count">
-                {{ course.lessonCount }}
-                {{ language.text('lessons') }}
-              </span>
-
-              <strong class="price">
-                @if (course.price === 0) {
-                  {{ language.text('free') }}
-                } @else {
-                  {{ course.price }} USD
-                }
-              </strong>
-            </div>
-          </div>
-        </a>
+      } @else {
+        <div class="hero-image-fallback" aria-hidden="true"></div>
       }
     </div>
+  </section>
 
-    <!-- PAGINATION -->
-
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button type="button" [disabled]="pageNumber === 1" (click)="changePage(pageNumber - 1)">
-          {{ language.text('previous') }}
-        </button>
-
-        <span>
-          {{ language.text('page') }}
-          {{ pageNumber }}
-          {{ language.text('of') }}
-          {{ totalPages() }}
-        </span>
-
-        <button
-          type="button"
-          [disabled]="pageNumber === totalPages()"
-          (click)="changePage(pageNumber + 1)"
-        >
-          {{ language.text('next') }}
-        </button>
+  <section class="category-section" aria-labelledby="category-title">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">01 / {{ language.text('category') }}</span>
+        <h2 id="category-title">{{ language.current() === 'ar' ? 'تعلّم حسب المجال' : 'Explore by category' }}</h2>
+      </div>
+      <button type="button" class="text-link" (click)="resetFilters()">{{ language.text('allCategories') }}</button>
+    </div>
+    @if (categories().length) {
+      <div class="category-list">
+        @for (category of categories(); track category.id) {
+          <button type="button" class="category-chip" [class.selected]="categoryId === category.id" (click)="selectCategory(category.id)">
+            {{ category.name }} <span aria-hidden="true">↗</span>
+          </button>
+        }
       </div>
     }
-  }
-</section>
+  </section>
+
+  <section class="catalog" id="catalog" aria-labelledby="catalog-title">
+    <div class="section-heading catalog-heading">
+      <div>
+        <span class="eyebrow">02 / {{ language.text('catalog') }}</span>
+        <h2 id="catalog-title">{{ language.current() === 'ar' ? 'اكتشف دورتك القادمة' : 'Find your next course' }}</h2>
+      </div>
+      <p>{{ language.text('catalogDescription') }}</p>
+    </div>
+
+    <form class="filters" (ngSubmit)="applyFilters()">
+      <div class="filter-field search-field">
+        <label for="course-search">{{ language.text('search') }}</label>
+        <input id="course-search" type="search" name="search" [(ngModel)]="search" [placeholder]="language.text('search')" />
+      </div>
+      <div class="filter-field">
+        <label for="category">{{ language.text('category') }}</label>
+        <select id="category" name="category" [(ngModel)]="categoryId">
+          <option [ngValue]="null">{{ language.text('allCategories') }}</option>
+          @for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="level">{{ language.text('level') }}</label>
+        <select id="level" name="level" [(ngModel)]="level">
+          <option value="">{{ language.text('allLevels') }}</option>
+          <option value="Beginner">{{ language.text('beginner') }}</option>
+          <option value="Intermediate">{{ language.text('intermediate') }}</option>
+          <option value="Advanced">{{ language.text('advanced') }}</option>
+        </select>
+      </div>
+      <div class="filter-field price-field">
+        <label for="min-price">{{ language.text('minPrice') }} ({{ language.currencyLabel() }})</label>
+        <input id="min-price" type="number" name="minPrice" dir="ltr" min="0" [(ngModel)]="minPrice" />
+      </div>
+      <div class="filter-field price-field">
+        <label for="max-price">{{ language.text('maxPrice') }} ({{ language.currencyLabel() }})</label>
+        <input id="max-price" type="number" name="maxPrice" dir="ltr" min="0" [(ngModel)]="maxPrice" />
+      </div>
+      <div class="filter-actions">
+        <button type="submit" class="apply-button">{{ language.text('apply') }}</button>
+        <button type="button" class="reset-button" (click)="resetFilters()">{{ language.text('reset') }}</button>
+      </div>
+    </form>
+
+    @if (loading()) {
+      <div class="course-grid" role="status" aria-busy="true" aria-live="polite">
+        @for (item of [1, 2, 3, 4]; track item) { <div class="course-skeleton"></div> }
+      </div>
+    } @else if (error()) {
+      <div class="empty-state" role="alert"><p>{{ language.text('error') }}</p><button class="apply-button" type="button" (click)="loadCourses()">{{ language.text('retry') }}</button></div>
+    } @else if (!courses().length) {
+      <div class="empty-state" role="status"><p>{{ language.text('empty') }}</p><button class="reset-button" type="button" (click)="resetFilters()">{{ language.text('reset') }}</button></div>
+    } @else {
+      <div class="results-line"><span>{{ totalCount() }} {{ language.text('result') }}</span><span>{{ language.text('page') }} {{ pageNumber }} {{ language.text('of') }} {{ totalPages() }}</span></div>
+      <div class="course-grid">
+        @for (course of courses(); track course.id) {
+          <article class="course-card">
+            <a class="course-image" [routerLink]="['/courses', course.id]" [attr.aria-label]="course.title">
+              @if (course.thumbnailUrl) { <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" /> }
+              @else { <span class="image-fallback">{{ course.categoryName }}</span> }
+            </a>
+            <div class="course-info">
+              <div class="course-kicker"><span>{{ course.categoryName }}</span><span>{{ language.levelName(course.level) }}</span></div>
+              <h3><a [routerLink]="['/courses', course.id]">{{ course.title }}</a></h3>
+              <p class="course-instructor">{{ language.text('instructor') }}: {{ course.instructorName }}</p>
+              <div class="course-foot">
+                <span class="course-facts">{{ course.lessonCount }} {{ language.text('lessons') }}
+                  @if (course.averageRating != null && course.reviewCount) { <span class="rating">★ {{ course.averageRating | number:'1.1-1' }} ({{ course.reviewCount }})</span> }
+                </span>
+                <strong>{{ course.price === 0 ? language.text('free') : language.formatCurrency(course.price) }}</strong>
+              </div>
+              <a class="details-link" [routerLink]="['/courses', course.id]">{{ language.current() === 'ar' ? 'عرض التفاصيل' : 'View course' }} <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+        }
+      </div>
+      @if (totalPages() > 1) {
+        <nav class="pagination" [attr.aria-label]="language.current() === 'ar' ? 'صفحات الدورات' : 'Course pages'">
+          <button type="button" [disabled]="pageNumber === 1" (click)="changePage(pageNumber - 1)">{{ language.text('previous') }}</button>
+          <span>{{ language.text('page') }} <strong>{{ pageNumber }}</strong> {{ language.text('of') }} {{ totalPages() }}</span>
+          <button type="button" [disabled]="pageNumber === totalPages()" (click)="changePage(pageNumber + 1)">{{ language.text('next') }}</button>
+        </nav>
+      }
+    }
+  </section>
+</div>

@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 import {
   Category,
@@ -19,7 +20,7 @@ export interface SaveCategory {
 export class CategoryService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'https://localhost:7194/api/Categories';
+  private apiUrl = `${API_BASE_URL}/Categories`;
 
   getAll(
     search: string,
