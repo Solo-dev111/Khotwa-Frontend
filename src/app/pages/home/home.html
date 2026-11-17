@@ -4,11 +4,10 @@
       <p class="eyebrow">{{ language.text('brand') }} <span></span> {{ language.text('catalog') }}</p>
       <h1 id="home-title">{{ language.current() === 'ar' ? 'تعلّم مهارة جديدة،' : 'Learn a new skill,' }}<br />{{ language.current() === 'ar' ? 'واخطُ نحو مستقبلك' : 'move toward your future' }}</h1>
       <p class="hero-description">{{ language.text('introduction') }}</p>
-      <form class="hero-search" (ngSubmit)="applyFilters()">
-        <label class="visually-hidden" for="hero-search">{{ language.text('search') }}</label>
-        <input id="hero-search" type="search" name="heroSearch" [(ngModel)]="search" [placeholder]="language.text('search')" />
-        <button type="submit">{{ language.text('apply') }}</button>
-      </form>
+      <a class="hero-cta" href="#catalog">
+        {{ language.text('catalog') }}
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6" /></svg>
+      </a>
     </div>
     <div class="hero-image"><img src="/images/learning-desk.webp" alt="" fetchpriority="high" /></div>
   </section>
