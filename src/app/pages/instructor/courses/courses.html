@@ -18,7 +18,7 @@
       </p>
     </div>
 
-    <button type="button" class="primary-button" (click)="openCreate()">
+    <button type="button" class="primary-button" (click)="openCreate()" [disabled]="saving() || uploading()">
       + {{ t('دورة جديدة', 'New Course') }}
     </button>
   </div>
@@ -48,7 +48,7 @@
           }}
         </h2>
 
-        <button type="button" class="close-button" (click)="closeForm()">✕</button>
+        <button type="button" class="close-button" (click)="closeForm()" [disabled]="saving() || uploading()">✕</button>
       </div>
 
       <form #courseForm="ngForm" (ngSubmit)="save()">
@@ -150,37 +150,14 @@
             </small>
           </div>
 
-          <!-- IMAGE UPLOAD -->
-          <div class="field">
-            <label for="course-image">
-              {{ t('صورة الدورة', 'Course Image') }}
-            </label>
-
-            <input
-              id="course-image"
-              class="file-input"
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp"
-              (change)="onImageSelected($event)"
-            />
-
-            <small>
-              {{ t('JPG أو PNG أو WEBP — بحد أقصى 3 MB', 'JPG, PNG or WEBP — maximum 3 MB') }}
-            </small>
-          </div>
-
-          <!-- IMAGE PREVIEW -->
-          @if (form.thumbnailUrl) {
-            <div class="image-preview">
-              <img [src]="form.thumbnailUrl" alt="Course thumbnail" />
-            </div>
-          }
-
-          @if (uploading()) {
-            <p class="upload-state">
-              {{ t('جاري رفع الصورة...', 'Uploading image...') }}
-            </p>
-          }
+          <!-- COURSE IMAGE -->
+          <div class="field full-width">
+                <app-course-image-picker
+                  [(imageUrl)]="form.thumbnailUrl"
+                  [disabled]="saving()"
+                  (uploadingChange)="uploading.set($event)"
+                />
+              </div>
         </div>
 
         <!-- PUBLICATION -->
@@ -221,7 +198,7 @@
             }
           </button>
 
-          <button type="button" class="secondary-button" (click)="closeForm()">
+          <button type="button" class="secondary-button" (click)="closeForm()" [disabled]="saving() || uploading()">
             {{ t('إلغاء', 'Cancel') }}
           </button>
         </div>
@@ -297,9 +274,9 @@
           <article class="course-row">
             <div class="course-thumbnail">
               @if (course.thumbnailUrl) {
-                <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" />
+                <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" (error)="useImageFallback($event)" />
               } @else {
-                <div class="no-image">KHOTWA</div>
+                <img src="/images/course-cover.svg" alt="" loading="lazy" />
               }
             </div>
 
@@ -333,7 +310,7 @@
                 {{ t('إدارة الدروس', 'Manage Lessons') }}
               </button>
 
-              <button type="button" class="secondary-button" (click)="openEdit(course)">
+              <button type="button" class="secondary-button" (click)="openEdit(course)" [disabled]="saving() || uploading()">
                 {{ t('تعديل', 'Edit') }}
               </button>
 

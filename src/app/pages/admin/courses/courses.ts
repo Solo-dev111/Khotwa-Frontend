@@ -6,6 +6,7 @@ import {
   afterNextRender
 } from '@angular/core';
 
+import { CourseImagePicker, isCourseImageUrlValid } from '../../../shared/course-image-picker/course-image-picker';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -27,7 +28,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-admin-courses',
-  imports: [FormsModule],
+  imports: [FormsModule, CourseImagePicker],
   templateUrl: './courses.html',
   styleUrl: './courses.css'
 })
@@ -46,6 +47,7 @@ export class Courses {
   loading = signal(true);
   loadingOptions = signal(true);
   saving = signal(false);
+  uploading = signal(false);
   deletingId = signal<number | null>(null);
 
   error = signal('');
@@ -217,6 +219,7 @@ export class Courses {
 
   // FORM: CREATE
   openCreate(): void {
+    if (this.saving() || this.uploading()) return;
 
     this.editingId = null;
     this.form = this.emptyForm();
@@ -228,6 +231,7 @@ export class Courses {
 
   // FORM: EDIT
   openEdit(course: Course): void {
+    if (this.saving() || this.uploading()) return;
 
     this.editingId = course.id;
 
@@ -249,7 +253,7 @@ export class Courses {
 
   closeForm(): void {
 
-    if (this.saving()) return;
+    if (this.saving() || this.uploading()) return;
 
     this.formOpen.set(false);
     this.editingId = null;
@@ -259,7 +263,12 @@ export class Courses {
   // SAVE COURSE
   save(): void {
 
-    if (!this.isAdmin() || this.saving()) return;
+    if (!this.isAdmin() || this.saving() || this.uploading()) return;
+
+    if (!isCourseImageUrlValid(this.form.thumbnailUrl)) {
+      this.error.set(this.t('أدخل رابط صورة صحيحاً يبدأ بـ http أو https.', 'Enter a valid HTTP or HTTPS image URL.'));
+      return;
+    }
 
     const title = this.form.title.trim();
     const description = this.form.description.trim();
@@ -381,6 +390,13 @@ export class Courses {
       }
 
     });
+  }
+
+  useImageFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith('/images/course-cover.svg')) {
+      image.src = '/images/course-cover.svg';
+    }
   }
 
   // DISPLAY HELPERS

@@ -1,0 +1,48 @@
+<div class="image-field">
+  <div class="field-heading">
+    <strong>{{ t('صورة الدورة', 'Course image') }}</strong>
+    <span>{{ t('اختيارية', 'Optional') }}</span>
+  </div>
+  <div class="image-layout">
+    <div class="image-preview">
+      @if (previewUrl(); as url) {
+        @if (failedUrl() !== url) {
+          <img [src]="url" [alt]="t('معاينة صورة الدورة', 'Course image preview')" (error)="failedUrl.set(url)" />
+        } @else {
+          <img src="/images/course-cover.svg" alt="" />
+        }
+      } @else {
+        <img src="/images/course-cover.svg" alt="" />
+      }
+    </div>
+    <div class="image-controls">
+      <input #imageInput type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+        hidden [disabled]="busy()" (change)="onImageSelected($event)" />
+      <button type="button" class="pick-file" [disabled]="busy()" (click)="imageInput.click()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>
+        {{ uploading() ? t('جاري رفع الصورة...', 'Uploading image...') : t('اختيار صورة من الجهاز', 'Choose image from device') }}
+      </button>
+      <small>{{ t('JPG أو PNG أو WEBP — حتى 3 ميجابايت', 'JPG, PNG or WEBP — up to 3 MB') }}</small>
+      <div class="or-divider"><span>{{ t('أو', 'or') }}</span></div>
+      <label for="course-image-url">{{ t('رابط مباشر للصورة', 'Direct image URL') }}</label>
+      <input id="course-image-url" type="url" dir="ltr" placeholder="https://example.com/image.jpg"
+        [value]="imageUrl() ?? ''" [disabled]="busy()" (input)="changeUrl($any($event.target).value)" />
+      @if (imageUrl()?.trim()) {
+        <button class="remove-image" type="button" [disabled]="busy()" (click)="removeImage()">
+          {{ t('إزالة الصورة', 'Remove image') }}
+        </button>
+      }
+    </div>
+  </div>
+  @if (uploading()) {
+    <p class="image-note" role="status">{{ t('انتظر اكتمال الرفع قبل حفظ الدورة.', 'Wait for the upload to finish before saving.') }}</p>
+  }
+  @if (uploadError()) {
+    <p class="image-error" role="alert">{{ uploadError() }}</p>
+  }
+  @if (!validUrl()) {
+    <p class="image-error" role="alert">{{ t('أدخل رابطاً صحيحاً يبدأ بـ http أو https.', 'Enter a valid HTTP or HTTPS URL.') }}</p>
+  } @else if (previewUrl() && failedUrl() === previewUrl()) {
+    <p class="image-error" role="alert">{{ t('تعذر عرض الصورة. تحقق من الرابط أو اختر صورة أخرى.', 'The image could not be displayed. Check the URL or choose another image.') }}</p>
+  }
+</div>
