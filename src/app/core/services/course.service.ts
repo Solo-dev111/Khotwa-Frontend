@@ -31,6 +31,7 @@ export interface Category {
   id: number;
   name: string;
   description: string | null;
+  courseCount?: number;
 }
 
 export interface PagedResult<T> {

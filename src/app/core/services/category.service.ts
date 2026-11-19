@@ -53,9 +53,18 @@ export class CategoryService {
     );
   }
 
-  delete(id: number): Observable<void> {
+  getDeleteOptions(id: number): Observable<{ category: Category; targets: Category[] }> {
+    return this.http.get<{ category: Category; targets: Category[] }>(
+      `${this.apiUrl}/${id}/delete-options`
+    );
+  }
+
+  delete(id: number, targetCategoryId?: number, expectedCourseCount?: number): Observable<void> {
+    let params = new HttpParams();
+    if (targetCategoryId !== undefined) params = params.set('targetCategoryId', targetCategoryId);
+    if (expectedCourseCount !== undefined) params = params.set('expectedCourseCount', expectedCourseCount);
     return this.http.delete<void>(
-      `${this.apiUrl}/${id}`
+      `${this.apiUrl}/${id}`, { params }
     );
   }
 }

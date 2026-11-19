@@ -27,6 +27,13 @@ export class Categories {
   categories = signal<Category[]>([]);
   loading = signal(true);
   saving = signal(false);
+  deleteCategory = signal<Category | null>(null);
+  deleteTargets = signal<Category[]>([]);
+  deleteLoading = signal(false);
+  deleting = signal(false);
+  deleteError = signal('');
+  targetId: number | null = null;
+  private previewVersion = 0;
 
   error = signal('');
   message = signal('');
@@ -135,34 +142,60 @@ export class Categories {
   }
 
   remove(category: Category): void {
-    const confirmed = confirm(
-      this.t(
-        `هل تريد حذف التصنيف "${category.name}"؟`,
-        `Delete category "${category.name}"?`
-      )
-    );
+    if (this.deleting()) return;
+    this.deleteCategory.set(category);
+    this.deleteTargets.set([]);
+    this.targetId = null;
+    this.deleteError.set('');
+    this.deleteLoading.set(true);
+    const version = ++this.previewVersion;
+    this.service.getDeleteOptions(category.id).subscribe({
+      next: response => {
+        if (version !== this.previewVersion) return;
+        this.deleteCategory.set(response.category);
+        this.deleteTargets.set(response.targets);
+        this.deleteLoading.set(false);
+      },
+      error: () => {
+        if (version !== this.previewVersion) return;
+        this.deleteLoading.set(false);
+        this.deleteError.set(this.t('تعذر تحميل معلومات الحذف. أعد المحاولة.', 'Could not load deletion details. Try again.'));
+      }
+    });
+  }
 
-    if (!confirmed) return;
+  closeDelete(): void {
+    if (this.deleting()) return;
+    ++this.previewVersion;
+    this.deleteCategory.set(null);
+  }
 
+  confirmDelete(): void {
+    const category = this.deleteCategory();
+    if (!category || category.courseCount === undefined || this.deleteLoading() ||
+        this.deleting() || this.deleteError()) return;
+    const count = category.courseCount;
+    const target = count > 0 ? this.targetId : null;
+    if (count > 0 && !this.deleteTargets().some(c => c.id === target)) return;
+    this.deleting.set(true);
     this.error.set('');
     this.message.set('');
-
-    this.service.delete(category.id).subscribe({
+    this.service.delete(category.id, target ?? undefined, count).subscribe({
       next: () => {
-        this.message.set(
-          this.t('تم حذف التصنيف', 'Category deleted')
-        );
-
-        // Return to previous page if last item was removed
-        if (this.categories().length === 1 &&
-            this.pageNumber > 1) {
-          this.pageNumber--;
-        }
-
+        this.deleting.set(false);
+        this.closeDelete();
+        if (this.editingId === category.id) this.cancelEdit();
+        this.message.set(count > 0
+          ? this.t('تم نقل الدورات وحذف التصنيف بنجاح.', 'Courses moved and category deleted successfully.')
+          : this.t('تم حذف التصنيف', 'Category deleted'));
+        if (this.categories().length === 1 && this.pageNumber > 1) this.pageNumber--;
         this.load();
       },
       error: (err: HttpErrorResponse) => {
-        this.showError(err);
+        this.deleting.set(false);
+        this.deleteError.set(err.status === 409 || err.status === 404
+          ? this.t('تغيرت بيانات التصنيف أو الدورات. حدّث المعلومات قبل التأكيد من جديد.', 'Categories or courses changed. Refresh before confirming again.')
+          : this.t('تعذر تنفيذ العملية. لم يتم تأكيد الحذف.', 'The operation failed. Deletion was not confirmed.'));
       }
     });
   }
