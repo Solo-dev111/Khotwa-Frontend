@@ -11,6 +11,7 @@ export interface LessonSummary {
   id: number;
   courseId: number;
   title: string;
+  durationMinutes: number | null;
   sortOrder: number;
   isPreview: boolean;
 }
@@ -26,6 +27,7 @@ export interface SaveLesson {
   title: string;
   content: string | null;
   videoUrl: string | null;
+  durationMinutes: number | null;
   sortOrder: number;
   isPreview: boolean;
 }

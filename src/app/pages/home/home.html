@@ -93,6 +93,7 @@
       <div class="course-grid">
         @for (course of courses(); track course.id) {
           <article class="course-card">
+            <app-favorite-button [courseId]="course.id" />
             <a class="course-image" [routerLink]="['/courses', course.id]" [attr.aria-label]="course.title">
               @if (course.thumbnailUrl) { <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" (error)="useFallback($event)" /> }
               @else { <img src="/images/course-cover.svg" alt="" loading="lazy" /> }
@@ -102,7 +103,7 @@
               <h3><a [routerLink]="['/courses', course.id]">{{ course.title }}</a></h3>
               <p class="course-instructor">{{ language.text('instructor') }}: {{ course.instructorName }}</p>
               <div class="course-foot">
-                <span class="course-facts">{{ course.lessonCount }} {{ language.text('lessons') }}
+                <span class="course-facts">{{ course.lessonCount }} {{ language.text('lessons') }} @if (course.durationMinutes != null) { · {{ course.durationMinutes }} {{ language.current() === 'ar' ? 'دقيقة' : 'min' }} }
                   @if (course.averageRating != null && course.reviewCount) { <span class="rating">★ {{ course.averageRating | number:'1.1-1' }} ({{ course.reviewCount }})</span> }
                 </span>
                 <strong>{{ course.price === 0 ? language.text('free') : language.formatCurrency(course.price) }}</strong>

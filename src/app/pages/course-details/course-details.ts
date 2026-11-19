@@ -1,3 +1,5 @@
+import { FavoriteButton } from '../../shared/favorite-button/favorite-button';
+import { LearningService, LearningStatus } from '../../core/services/learning.service';
 import { Observable } from 'rxjs';
 import { DecimalPipe } from '@angular/common';
 import { CourseReviews } from '../course-reviews/course-reviews';
@@ -36,12 +38,15 @@ import {
 
 @Component({
   selector: 'app-course-details',
- imports: [RouterLink, CourseReviews, DecimalPipe],
+ imports: [RouterLink, CourseReviews, DecimalPipe, FavoriteButton],
   templateUrl: './course-details.html',
   styleUrl: './course-details.css'
 })
 export class CourseDetails {
 
+  private learning = inject(LearningService);
+  progress = signal<LearningStatus | null>(null);
+  completing = signal(false);
   private route = inject(ActivatedRoute);
   private lessonService = inject(LessonService);
   private studentService = inject(StudentCourseService);
@@ -131,11 +136,10 @@ export class CourseDetails {
   checkEnrollment(): void {
     this.checkingEnrollment.set(true);
 
-    this.studentService.getMyEnrollments().subscribe({
+    this.learning.get(this.courseId).subscribe({
       next: response => {
-        this.enrolled.set(
-          response.items.some(e => e.courseId === this.courseId)
-        );
+        this.progress.set(response);
+        this.enrolled.set(response.enrolled);
         this.checkingEnrollment.set(false);
       },
       error: (err: HttpErrorResponse) => {
@@ -143,6 +147,50 @@ export class CourseDetails {
         this.showError(err);
       }
     });
+  }
+
+  duration(minutes: number | null | undefined): string {
+    if (minutes == null) return this.t('غير محددة', 'Not specified');
+    const h = Math.floor(minutes / 60), m = minutes % 60;
+    return [h ? h + this.t(' ساعة', ' h') : '', m ? m + this.t(' دقيقة', ' min') : ''].filter(Boolean).join(' ') || '0';
+  }
+
+  percent(): number {
+    const p = this.progress();
+    return p && p.totalLessons > 0 ? Math.min(100, Math.round(p.completedLessonIds.length * 100 / p.totalLessons)) : 0;
+  }
+
+  completeLesson(id: number): void {
+    if (!this.enrolled() || this.completing()) return;
+    this.completing.set(true);
+    this.learning.complete(this.courseId, id).subscribe({
+      next: p => { this.progress.set(p); this.completing.set(false); },
+      error: err => { this.completing.set(false); this.showError(err); }
+    });
+  }
+
+  printCertificate(): void {
+    const c = this.progress()?.certificate;
+    if (!c) return;
+    const popup = window.open('', '_blank');
+    if (!popup) { this.error.set(this.t('اسمح بالنوافذ المنبثقة لعرض الشهادة.', 'Allow popups to view the certificate.')); return; }
+    popup.opener = null;
+    const doc = popup.document;
+    doc.title = this.t('شهادة إتمام - خطوة','Khotwa - Certificate');
+    doc.documentElement.dir = this.language.current() === 'ar' ? 'rtl' : 'ltr';
+    const style = doc.createElement('style');
+    style.textContent = '@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#153e32;margin:0;padding:24px;text-align:center}main{border:6px double #355b48;padding:35px;min-height:145mm;box-sizing:border-box}h1{font-size:30px}h2{font-size:25px;overflow-wrap:anywhere}p{font-size:17px}small{font-size:12px;overflow-wrap:anywhere}button{margin:16px;padding:12px 20px;background:#355b48;color:white;border:0;border-radius:5px;cursor:pointer}@media print{button{display:none}body{padding:0}}';
+    doc.head.append(style);
+    const main = doc.createElement('main');
+    const add = (tag: string, value: string) => {const el=doc.createElement(tag);el.textContent=value;main.append(el);};
+    add('h1', this.t('خطوة | شهادة إتمام','Khotwa | Certificate of Completion'));
+    add('p',this.t('تشهد منصة خطوة بإتمام الطالب','Khotwa certifies that'));
+    add('h2',c.studentName);add('p',this.t('دورة','Course'));add('h2',c.courseTitle);
+    add('p',this.t('المدرب: ','Instructor: ')+c.instructorName);
+    add('p',this.t('المدة: ','Duration: ')+this.duration(c.durationMinutes));
+    add('p',c.issuedAt.slice(0,10));add('small',c.certificateNumber);
+    doc.body.append(main);
+    const button=doc.createElement('button');button.textContent=this.t('طباعة / حفظ PDF','Print / save PDF');button.onclick=()=>popup.print();doc.body.append(button);
   }
 
   // Access rules for lesson viewing
@@ -227,6 +275,7 @@ export class CourseDetails {
       next: () => {
         this.busy.set(false);
         this.enrolled.set(true);
+        this.checkEnrollment();
 
         this.message.set(this.t(
           'تم تسجيلك في الدورة بنجاح! يمكنك الآن مشاهدة دروسها.',

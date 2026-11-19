@@ -118,6 +118,11 @@
           </small>
         </div>
 
+        <div class="field">
+          <label for="duration">{{ t('مدة الدرس بالدقائق', 'Lesson duration in minutes') }}</label>
+          <input id="duration" name="durationMinutes" type="number" min="1" max="1440" step="1" required [(ngModel)]="form.durationMinutes" />
+        </div>
+
         <!-- SORT ORDER -->
         <div class="field">
           <label for="sort-order">
@@ -233,6 +238,7 @@
             <!-- LESSON INFORMATION -->
             <div class="lesson-info">
               <h3>{{ lesson.title }}</h3>
+              <small>{{ lesson.durationMinutes == null ? t('المدة غير محددة', 'Duration not set') : lesson.durationMinutes + t(' دقيقة', ' min') }}</small>
 
               @if (lesson.isPreview) {
                 <span class="lesson-status preview">

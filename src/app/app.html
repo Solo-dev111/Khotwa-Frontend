@@ -30,6 +30,7 @@
         }
 
         @if (auth.currentUser()?.role === 'Student') {
+          <a routerLink="/favorites" routerLinkActive="is-active" (click)="closeMenu()">{{ language.current() === 'ar' ? 'المفضلة' : 'Favorites' }}</a>
           <a routerLink="/my-courses" routerLinkActive="is-active" (click)="closeMenu()">
             {{ language.current() === 'ar' ? 'دوراتي' : 'My courses' }}
           </a>

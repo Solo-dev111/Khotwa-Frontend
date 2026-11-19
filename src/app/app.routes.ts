@@ -14,6 +14,7 @@ import { Courses } from './pages/instructor/courses/courses';
 import { Lessons } from './pages/instructor/lessons/lessons';
 
 import { CourseDetails } from './pages/course-details/course-details';
+import { Favorites } from './pages/favorites/favorites';
 import { MyCourses } from './pages/my-courses/my-courses';
 import { roleGuard } from './core/guards/role.guard';
 
@@ -107,6 +108,8 @@ export const routes: Routes = [
     data: { roles: ['Student'] },
     title: 'Khotwa - My Courses'
   },
+
+  { path: 'favorites', component: Favorites, canActivate: [roleGuard], data: { roles: ['Student'] }, title: 'Khotwa - Favorites' },
 
   // NOT FOUND
   {

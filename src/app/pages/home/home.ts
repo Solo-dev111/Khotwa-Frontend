@@ -1,3 +1,4 @@
+import { FavoriteButton } from '../../shared/favorite-button/favorite-button';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 
@@ -20,7 +21,7 @@ import {
 
 @Component({
   selector: 'app-home',
-imports: [FormsModule, RouterLink, DecimalPipe],
+imports: [FormsModule, RouterLink, DecimalPipe, FavoriteButton],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })

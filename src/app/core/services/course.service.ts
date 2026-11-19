@@ -23,6 +23,7 @@ export interface Course {
   instructorId: number;
   instructorName: string;
   lessonCount: number;
+  durationMinutes?: number | null;
   averageRating?: number | null;
   reviewCount?: number | null;
 }
