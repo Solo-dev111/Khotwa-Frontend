@@ -71,7 +71,10 @@
           {{ language.text('accountType') }}
         </label>
 
-        <select id="account-role" name="role" [(ngModel)]="role">
+        <select id="account-role" name="role" [(ngModel)]="role" [disabled]="checkingStatus() || statusError() || loading()">
+          @if (canRegisterAdmin()) {
+            <option value="admin">{{ language.text('adminRole') }}</option>
+          }
           <option value="student">
             {{ language.text('student') }}
           </option>
@@ -80,6 +83,14 @@
             {{ language.text('instructorRole') }}
           </option>
         </select>
+        @if (checkingStatus()) {
+          <small role="status">{{ language.text('checkingRegistration') }}</small>
+        } @else if (statusError()) {
+          <p class="auth-error" role="alert">{{ language.text('authError') }}</p>
+          <button type="button" (click)="loadRegistrationStatus()">{{ language.text('retry') }}</button>
+        } @else if (canRegisterAdmin()) {
+          <small>{{ language.text('firstAdminHint') }}</small>
+        }
       </div>
 
       @if (error()) {
@@ -88,7 +99,7 @@
         </p>
       }
 
-      <button class="auth-submit" type="submit" [disabled]="registerForm.invalid || loading()">
+      <button class="auth-submit" type="submit" [disabled]="registerForm.invalid || loading() || checkingStatus() || statusError()">
         @if (loading()) {
           {{ language.text('registering') }}
         } @else {
