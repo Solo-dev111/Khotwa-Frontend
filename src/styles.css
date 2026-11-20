@@ -2,22 +2,22 @@
 
 :root {
   color-scheme: light;
-  --paper: #f7f6f2;
-  --surface: #fffefa;
+  --paper: #f8f7f3;
+  --surface: #ffffff;
   --surface-soft: #eeeee7;
-  --ink: #202823;
+  --ink: #202922;
   --ink-soft: #455048;
-  --muted: #747b72;
-  --line: #dcded5;
-  --forest: #28372f;
-  --forest-light: #405548;
+  --muted: #536056;
+  --line: #d2d7cc;
+  --forest: #254b3e;
+  --forest-light: #365e4e;
   --clay: #a9563e;
   --clay-dark: #88412f;
-  --sage: #dce3d8;
+  --sage: #dce7dc;
   --gold: #a9824d;
   --danger: #9a4035;
   --success: #426a4a;
-  --content-width: 1320px;
+  --content-width: 1220px;
 }
 
 * {

@@ -18,7 +18,7 @@
       </p>
     </div>
 
-    <button type="button" class="primary-button" (click)="openCreate()">
+    <button type="button" class="primary-button" (click)="openCreate()" [disabled]="saving() || uploading()">
       + {{ t('إضافة دورة', 'Add Course') }}
     </button>
   </header>
@@ -59,7 +59,7 @@
             </h2>
           </div>
 
-          <button type="button" class="close-button" (click)="closeForm()">✕</button>
+          <button type="button" class="close-button" (click)="closeForm()" [disabled]="saving() || uploading()">✕</button>
         </div>
 
         @if (loadingOptions()) {
@@ -193,29 +193,13 @@
                 </select>
               </div>
 
-              <!-- THUMBNAIL URL -->
+              <!-- COURSE IMAGE -->
               <div class="field full-width">
-                <label for="thumbnailUrl">
-                  {{ t('رابط صورة الدورة', 'Course Image URL') }}
-                </label>
-
-                <input
-                  id="thumbnailUrl"
-                  name="thumbnailUrl"
-                  type="url"
-                  [(ngModel)]="form.thumbnailUrl"
-                  dir="ltr"
-                  placeholder="https://example.com/image.jpg"
+                <app-course-image-picker
+                  [(imageUrl)]="form.thumbnailUrl"
+                  [disabled]="saving()"
+                  (uploadingChange)="uploading.set($event)"
                 />
-
-                <small>
-                  {{
-                    t(
-                      'أدخل رابط صورة مباشر. رفع الصور من الجهاز غير متاح عبر الـ API الحالي.',
-                      'Enter a direct image URL. Local image upload is not supported by the current API.'
-                    )
-                  }}
-                </small>
               </div>
 
               <!-- PUBLICATION -->
@@ -247,7 +231,7 @@
                 class="primary-button"
                 [disabled]="
                   courseForm.invalid ||
-                  saving() ||
+                  saving() || uploading() ||
                   loadingOptions() ||
                   categories().length === 0 ||
                   instructors().length === 0
@@ -259,7 +243,7 @@
               <button
                 type="button"
                 class="secondary-button"
-                [disabled]="saving()"
+                [disabled]="saving() || uploading()"
                 (click)="closeForm()"
               >
                 {{ t('إلغاء', 'Cancel') }}
@@ -392,9 +376,10 @@
                           [src]="course.thumbnailUrl"
                           [alt]="course.title"
                           class="course-thumbnail"
+                          (error)="useImageFallback($event)"
                         />
                       } @else {
-                        <div class="course-placeholder">K.</div>
+                        <img src="/images/course-cover.svg" alt="" class="course-thumbnail" />
                       }
 
                       <div class="course-details">
@@ -442,7 +427,7 @@
                   <!-- ACTIONS -->
                   <td>
                     <div class="row-actions">
-                      <button type="button" class="secondary-button" (click)="openEdit(course)">
+                      <button type="button" class="secondary-button" (click)="openEdit(course)" [disabled]="saving() || uploading()">
                         {{ t('تعديل', 'Edit') }}
                       </button>
 

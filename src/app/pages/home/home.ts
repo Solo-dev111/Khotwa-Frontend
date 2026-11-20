@@ -1,3 +1,4 @@
+import { FavoriteButton } from '../../shared/favorite-button/favorite-button';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 
@@ -20,7 +21,7 @@ import {
 
 @Component({
   selector: 'app-home',
-imports: [FormsModule, RouterLink, DecimalPipe],
+imports: [FormsModule, RouterLink, DecimalPipe, FavoriteButton],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -127,5 +128,11 @@ export class Home {
   selectCategory(categoryId: number): void {
     this.categoryId = this.categoryId === categoryId ? null : categoryId;
     this.applyFilters();
+  }
+  useFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith('/images/course-cover.svg')) {
+      image.src = '/images/course-cover.svg';
+    }
   }
 }

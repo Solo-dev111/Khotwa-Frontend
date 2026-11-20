@@ -232,3 +232,13 @@ td {
     padding: 18px;
   }
 }
+
+.delete-overlay{position:fixed;inset:0;z-index:1000;background:rgba(28,40,33,.48);display:grid;place-items:center;padding:20px}
+.delete-dialog{width:min(100%,460px);max-height:90vh;overflow:auto;background:#fff;border:1px solid #d2d7cc;border-radius:12px;padding:24px;color:#202922}
+.delete-dialog h2{font-size:21px;margin:0 0 14px;overflow-wrap:anywhere}
+.delete-dialog p{font-size:14px;line-height:1.8;margin:0 0 14px}
+.delete-dialog label{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+.delete-dialog select{width:100%;padding:10px;border:1px solid #d2d7cc;border-radius:5px;background:#fcfcfa;color:#202922}
+.dialog-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:22px}
+.dialog-actions .primary-button{background:#254b3e}
+.dialog-actions button:disabled{opacity:.5;cursor:not-allowed}

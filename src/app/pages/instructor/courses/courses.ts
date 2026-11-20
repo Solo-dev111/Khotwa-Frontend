@@ -7,6 +7,7 @@ import {
   afterNextRender
 } from '@angular/core';
 
+import { CourseImagePicker, isCourseImageUrlValid } from '../../../shared/course-image-picker/course-image-picker';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -25,7 +26,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-instructor-courses',
-  imports: [FormsModule],
+  imports: [FormsModule, CourseImagePicker],
   templateUrl: './courses.html',
   styleUrl: './courses.css'
 })
@@ -158,6 +159,7 @@ export class Courses {
 
   // SHOW CREATE FORM
   openCreate(): void {
+    if (this.saving() || this.uploading()) return;
     this.editingId = null;
     this.form = this.emptyForm();
 
@@ -168,6 +170,7 @@ export class Courses {
 
   // SHOW EDIT FORM
   openEdit(course: Course): void {
+    if (this.saving() || this.uploading()) return;
     this.editingId = course.id;
 
     this.form = {
@@ -196,53 +199,14 @@ export class Courses {
     this.form = this.emptyForm();
   }
 
-  // UPLOAD IMAGE FROM DEVICE
-  onImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) return;
-
-    const allowed = [
-      'image/jpeg',
-      'image/png',
-      'image/webp'
-    ];
-
-    if (!allowed.includes(file.type)) {
-      this.error.set(this.t(
-        'اختر صورة JPG أو PNG أو WEBP.',
-        'Choose a JPG, PNG or WEBP image.'
-      ));
-      return;
-    }
-
-    if (file.size > 3 * 1024 * 1024) {
-      this.error.set(this.t(
-        'حجم الصورة يجب ألا يتجاوز 3 ميجابايت.',
-        'Image must not exceed 3 MB.'
-      ));
-      return;
-    }
-
-    this.uploading.set(true);
-    this.error.set('');
-
-    this.service.uploadImage(file).subscribe({
-      next: response => {
-        this.form.thumbnailUrl = response.url;
-        this.uploading.set(false);
-      },
-      error: err => {
-        this.uploading.set(false);
-        this.showError(err);
-      }
-    });
-  }
-
   // CREATE OR UPDATE COURSE
   save(): void {
     if (this.saving() || this.uploading()) {
+      return;
+    }
+
+    if (!isCourseImageUrlValid(this.form.thumbnailUrl)) {
+      this.error.set(this.t('أدخل رابط صورة صحيحاً يبدأ بـ http أو https.', 'Enter a valid HTTP or HTTPS image URL.'));
       return;
     }
 
@@ -265,7 +229,8 @@ export class Courses {
     const data: SaveCourse = {
       ...this.form,
       title: this.form.title.trim(),
-      description: this.form.description.trim()
+      description: this.form.description.trim(),
+      thumbnailUrl: this.form.thumbnailUrl?.trim() || null
     };
 
     const isEditing = this.editingId !== null;
@@ -324,6 +289,13 @@ const request: Observable<Course | void> = isEditing
       },
       error: err => this.showError(err)
     });
+  }
+
+  useImageFallback(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith('/images/course-cover.svg')) {
+      image.src = '/images/course-cover.svg';
+    }
   }
 
   // DISPLAY HTTP ERRORS

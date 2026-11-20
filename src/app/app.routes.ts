@@ -14,6 +14,7 @@ import { Courses } from './pages/instructor/courses/courses';
 import { Lessons } from './pages/instructor/lessons/lessons';
 
 import { CourseDetails } from './pages/course-details/course-details';
+import { Favorites } from './pages/favorites/favorites';
 import { MyCourses } from './pages/my-courses/my-courses';
 import { roleGuard } from './core/guards/role.guard';
 
@@ -36,6 +37,9 @@ export const routes: Routes = [
     component: Register,
     title: 'Khotwa - Register'
   },
+
+  { path: 'about', loadComponent: () => import('./pages/info/info').then(m => m.Info), data: { page: 'about' }, title: 'Khotwa - About' },
+  { path: 'help', loadComponent: () => import('./pages/info/info').then(m => m.Info), data: { page: 'help' }, title: 'Khotwa - Help' },
 
   // ADMIN
   {
@@ -107,6 +111,8 @@ export const routes: Routes = [
     data: { roles: ['Student'] },
     title: 'Khotwa - My Courses'
   },
+
+  { path: 'favorites', component: Favorites, canActivate: [roleGuard], data: { roles: ['Student'] }, title: 'Khotwa - Favorites' },
 
   // NOT FOUND
   {

@@ -12,7 +12,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 
-export type RegisterRole = 'student' | 'instructor';
+export type RegisterRole = 'student' | 'instructor' | 'admin';
 
 export interface AuthResponse {
   userId: number;
@@ -94,7 +94,13 @@ export class AuthService {
     );
   }
 
-  // REGISTER STUDENT OR INSTRUCTOR
+  registrationStatus(): Observable<{ canRegisterAdmin: boolean }> {
+    return this.http.get<{ canRegisterAdmin: boolean }>(
+      `${this.apiUrl}/registration-status`
+    );
+  }
+
+  // REGISTER STUDENT, INSTRUCTOR OR FIRST ADMIN
   register(
     data: RegisterRequest,
     role: RegisterRole

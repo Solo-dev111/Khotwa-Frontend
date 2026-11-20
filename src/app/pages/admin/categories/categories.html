@@ -128,6 +128,7 @@
               <th>ID</th>
               <th>{{ t('التصنيف', 'Category') }}</th>
               <th>{{ t('الوصف', 'Description') }}</th>
+              <th>{{ t('عدد الدورات', 'Courses') }}</th>
               <th>{{ t('الإجراءات', 'Actions') }}</th>
             </tr>
           </thead>
@@ -138,6 +139,7 @@
                 <td>{{ category.id }}</td>
                 <td class="category-name">{{ category.name }}</td>
                 <td>{{ category.description || '—' }}</td>
+                <td>{{ category.courseCount ?? '—' }}</td>
                 <td>
                   <div class="table-actions">
                     <button type="button" class="edit-button" (click)="edit(category)">
@@ -175,3 +177,40 @@
     }
   </section>
 </section>
+
+@if (deleteCategory(); as category) {
+  <div class="delete-overlay" (click)="closeDelete()" (keydown.escape)="closeDelete()">
+    <section class="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title" (click)="$event.stopPropagation()">
+      <h2 id="delete-title">{{ t('حذف التصنيف', 'Delete category') }}: {{ category.name }}</h2>
+      @if (deleteLoading()) {
+        <p role="status">{{ t('جاري تحميل المعلومات...', 'Loading details...') }}</p>
+      } @else if (deleteError()) {
+        <p class="alert error" role="alert">{{ deleteError() }}</p>
+        <button class="secondary-button" type="button" (click)="remove(category)">{{ t('تحديث المعلومات', 'Refresh details') }}</button>
+      } @else if ((category.courseCount ?? 0) > 0) {
+        <p>{{ t('عدد الدورات المرتبطة:', 'Linked courses:') }} <strong>{{ category.courseCount }}</strong></p>
+        <p>{{ t('سيتم نقل الدورات إلى تصنيف آخر دون حذف محتواها أو بيانات الطلاب.', 'Courses will be moved without deleting their content or student records.') }}</p>
+        @if (deleteTargets().length > 0) {
+          <label for="transfer-target">{{ t('نقل الدورات إلى', 'Move courses to') }}</label>
+          <select id="transfer-target" [(ngModel)]="targetId" [disabled]="deleting()">
+            <option [ngValue]="null">{{ t('اختر تصنيفاً', 'Choose a category') }}</option>
+            @for (target of deleteTargets(); track target.id) {
+              <option [ngValue]="target.id">{{ target.name }}</option>
+            }
+          </select>
+        } @else {
+          <p class="alert error">{{ t('أنشئ تصنيفاً بديلاً أولاً، ثم أعد محاولة الحذف.', 'Create another category first, then retry deletion.') }}</p>
+        }
+      } @else {
+        <p>{{ t('هذا التصنيف لا يحتوي على دورات. هل تريد حذفه نهائياً؟', 'This category contains no courses. Delete it permanently?') }}</p>
+      }
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="closeDelete()" [disabled]="deleting()">{{ t('إلغاء', 'Cancel') }}</button>
+        <button class="primary-button" type="button" (click)="confirmDelete()"
+          [disabled]="deleteLoading() || deleting() || !!deleteError() || category.courseCount === undefined || ((category.courseCount ?? 0) > 0 && targetId === null)">
+          {{ deleting() ? t('جاري التنفيذ...', 'Working...') : (category.courseCount ?? 0) > 0 ? t('نقل الدورات وحذف التصنيف', 'Move courses and delete') : t('تأكيد الحذف', 'Confirm deletion') }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

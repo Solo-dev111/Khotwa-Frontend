@@ -20,37 +20,30 @@
       {{ t('جاري تحميل تفاصيل الدورة...', 'Loading course details...') }}
     </div>
   } @else if (course(); as course) {
+    <div class="course-hero">
+      <div class="hero-copy">
+        <span class="category-tag">{{ course.categoryName }}</span>
+        <h1>{{ course.title }}</h1>
+        <p>{{ course.description }}</p>
+        <strong>{{ t('المدرب', 'Instructor') }}: {{ course.instructorName }}</strong>
+      </div>
+      <img [src]="course.thumbnailUrl || '/images/course-cover.svg'" [alt]="course.title" (error)="useFallback($event)" />
+    </div>
+    <div class="facts-strip">
+      <div><small>{{ t('المستوى','Level') }}</small><strong>{{ language.levelName(course.level) }}</strong></div>
+      <div><small>{{ t('المدة','Duration') }}</small><strong>{{ duration(course.durationMinutes) }}</strong></div>
+      <div><small>{{ t('عدد الدروس','Lessons') }}</small><strong>{{ course.lessonCount }}</strong></div>
+      <div><small>{{ t('شهادة الإتمام','Certificate') }}</small><strong>{{ course.lessonCount > 0 ? t('بعد الإكمال','On completion') : t('غير متاحة حالياً','Not available yet') }}</strong></div>
+    </div>
     <div class="course-layout">
       <!-- MAIN COURSE INFORMATION -->
       <div class="main-column">
-        <div class="course-cover">
-          @if (course.thumbnailUrl) {
-            <img [src]="course.thumbnailUrl" [alt]="course.title" />
-          } @else {
-            <div class="cover-placeholder"><span>{{ course.categoryName }}</span><strong>{{ course.title }}</strong></div>
-          }
-        </div>
-
-        <div class="course-heading">
-          <div class="metadata">
-            <span>{{ course.categoryName }}</span>
-            <span>{{ language.levelName(course.level) }}</span>
-          </div>
-
-          <h1>{{ course.title }}</h1>
-
-          <p class="instructor-name">
-            {{ t('المدرب', 'Instructor') }}:
-            <strong>{{ course.instructorName }}</strong>
-          </p>
-          <div class="overview-facts">
-            <span>{{ t('عدد الدروس', 'Lessons') }} <strong>{{ course.lessonCount }}</strong></span>
-            @if (course.averageRating != null && course.reviewCount) {
-              <span>★ {{ course.averageRating | number:'1.1-1' }} <small>({{ course.reviewCount }})</small></span>
-            }
-          </div>
-        </div>
-
+        @if (enrolled() && progress()) {
+          <section class="content-section">
+            <h2>{{ t('تقدمك في الدورة','Your progress') }} — {{ percent() }}%</h2>
+            <progress [value]="percent()" max="100"></progress>
+          </section>
+        }
         <section class="content-section">
           <h2>
             {{ t('عن هذه الدورة', 'About This Course') }}
@@ -91,7 +84,8 @@
                   </div>
 
                   <div class="lesson-info">
-                    <h3>{{ lesson.title }}</h3>
+                    <h3>{{ lesson.title }}</h3><small>{{ duration(lesson.durationMinutes) }}</small>
+                    @if (progress()?.completedLessonIds?.includes(lesson.id)) { <span class="preview-label">✓ {{ t("مكتمل","Completed") }}</span> }
 
                     @if (lesson.isPreview) {
                       <span class="preview-label">
@@ -174,6 +168,9 @@
                 {{ t('لا يوجد محتوى لهذا الدرس حالياً.', 'This lesson has no content yet.') }}
               </p>
             }
+            @if (enrolled()) {
+              <button class="purchase-button" type="button" [disabled]="completing() || !!progress()?.completedLessonIds?.includes(lesson.id)" (click)="completeLesson(lesson.id)">{{ progress()?.completedLessonIds?.includes(lesson.id) ? t('تم إكمال الدرس','Lesson completed') : t('إكمال الدرس','Mark complete') }}</button>
+            }
           </section>
         }
         <app-course-reviews
@@ -227,7 +224,7 @@
             {{ t('سجّل الدخول للالتحاق بهذه الدورة.', 'Sign in to enroll in this course.') }}
           </p>
 
-          <a routerLink="/login" class="purchase-button">
+          <a routerLink="/login" [queryParams]="{ returnUrl: '/courses/' + course.id }" class="purchase-button">
             {{ t('تسجيل الدخول', 'Sign In') }}
           </a>
         }
@@ -285,6 +282,10 @@
               )
             }}
           </p>
+        }
+        <app-favorite-button class="wide" [courseId]="course.id" [showLabel]="true" />
+        @if (progress()?.certificate; as cert) {
+          <button type="button" class="purchase-button" (click)="printCertificate()">{{ t('عرض وحفظ الشهادة PDF','Print / save certificate PDF') }}</button>
         }
       </aside>
     </div>

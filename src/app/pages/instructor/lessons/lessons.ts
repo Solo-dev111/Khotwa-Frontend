@@ -86,6 +86,7 @@ export class Lessons {
       title: '',
       content: '',
       videoUrl: '',
+      durationMinutes: null,
       sortOrder: 1,
       isPreview: false
     };
@@ -159,6 +160,7 @@ export class Lessons {
           title: lesson.title,
           content: lesson.content ?? '',
           videoUrl: lesson.videoUrl ?? '',
+          durationMinutes: lesson.durationMinutes,
           sortOrder: lesson.sortOrder,
           isPreview: lesson.isPreview
         };
@@ -193,6 +195,7 @@ export class Lessons {
 
     if (
       !this.form.title.trim() ||
+      !Number.isInteger(this.form.durationMinutes) || (this.form.durationMinutes ?? 0) < 1 || (this.form.durationMinutes ?? 0) > 1440 ||
       !Number.isInteger(this.form.sortOrder) ||
       this.form.sortOrder < 0
     ) {
@@ -211,6 +214,7 @@ export class Lessons {
       title: this.form.title.trim(),
       content: this.form.content?.trim() || null,
       videoUrl: this.form.videoUrl?.trim() || null,
+      durationMinutes: this.form.durationMinutes,
       sortOrder: this.form.sortOrder,
       isPreview: this.form.isPreview
     };

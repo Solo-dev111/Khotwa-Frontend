@@ -4,24 +4,18 @@
       <p class="eyebrow">{{ language.text('brand') }} <span></span> {{ language.text('catalog') }}</p>
       <h1 id="home-title">{{ language.current() === 'ar' ? 'تعلّم مهارة جديدة،' : 'Learn a new skill,' }}<br />{{ language.current() === 'ar' ? 'واخطُ نحو مستقبلك' : 'move toward your future' }}</h1>
       <p class="hero-description">{{ language.text('introduction') }}</p>
-      <form class="hero-search" (ngSubmit)="applyFilters()">
-        <label class="visually-hidden" for="hero-search">{{ language.text('search') }}</label>
-        <input id="hero-search" type="search" name="heroSearch" [(ngModel)]="search" [placeholder]="language.text('search')" />
-        <button type="submit">{{ language.text('apply') }}</button>
-      </form>
+      <a class="hero-cta" href="#catalog">
+        {{ language.text('catalog') }}
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14m-6-6 6 6 6-6" /></svg>
+      </a>
     </div>
-    <div class="hero-image">
-      @if (courses()[0]; as featured) {
-        @if (featured.thumbnailUrl) {
-          <img [src]="featured.thumbnailUrl" [alt]="featured.title" fetchpriority="high" />
-        } @else {
-          <div class="hero-image-fallback" aria-hidden="true"></div>
-        }
-      } @else {
-        <div class="hero-image-fallback" aria-hidden="true"></div>
-      }
-    </div>
+    <div class="hero-image"><img src="/images/learning-desk.webp" alt="" fetchpriority="high" /></div>
   </section>
+  <div class="learning-benefits">
+    <div><span class="benefit-icon" aria-hidden="true">◫</span><div><strong>{{ language.current() === 'ar' ? 'دورات متنوعة' : 'Explore diverse courses' }}</strong><small>{{ language.current() === 'ar' ? 'اختر المجال الذي يناسبك' : 'Find a subject that suits you' }}</small></div></div>
+    <div><span class="benefit-icon" aria-hidden="true">▷</span><div><strong>{{ language.current() === 'ar' ? 'تعلّم على طريقتك' : 'Learn at your own pace' }}</strong><small>{{ language.current() === 'ar' ? 'تصفّح الدروس من مكانك' : 'Access lessons from anywhere' }}</small></div></div>
+    <div><span class="benefit-icon" aria-hidden="true">◎</span><div><strong>{{ language.current() === 'ar' ? 'طوّر مهاراتك' : 'Build your skills' }}</strong><small>{{ language.current() === 'ar' ? 'اكتشف محتوى جديداً' : 'Discover new learning content' }}</small></div></div>
+  </div>
 
   <section class="category-section" aria-labelledby="category-title">
     <div class="section-heading">
@@ -99,16 +93,17 @@
       <div class="course-grid">
         @for (course of courses(); track course.id) {
           <article class="course-card">
+            <app-favorite-button [courseId]="course.id" />
             <a class="course-image" [routerLink]="['/courses', course.id]" [attr.aria-label]="course.title">
-              @if (course.thumbnailUrl) { <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" /> }
-              @else { <span class="image-fallback">{{ course.categoryName }}</span> }
+              @if (course.thumbnailUrl) { <img [src]="course.thumbnailUrl" [alt]="course.title" loading="lazy" (error)="useFallback($event)" /> }
+              @else { <img src="/images/course-cover.svg" alt="" loading="lazy" /> }
             </a>
             <div class="course-info">
               <div class="course-kicker"><span>{{ course.categoryName }}</span><span>{{ language.levelName(course.level) }}</span></div>
               <h3><a [routerLink]="['/courses', course.id]">{{ course.title }}</a></h3>
               <p class="course-instructor">{{ language.text('instructor') }}: {{ course.instructorName }}</p>
               <div class="course-foot">
-                <span class="course-facts">{{ course.lessonCount }} {{ language.text('lessons') }}
+                <span class="course-facts">{{ course.lessonCount }} {{ language.text('lessons') }} @if (course.durationMinutes != null) { · {{ course.durationMinutes }} {{ language.current() === 'ar' ? 'دقيقة' : 'min' }} }
                   @if (course.averageRating != null && course.reviewCount) { <span class="rating">★ {{ course.averageRating | number:'1.1-1' }} ({{ course.reviewCount }})</span> }
                 </span>
                 <strong>{{ course.price === 0 ? language.text('free') : language.formatCurrency(course.price) }}</strong>
