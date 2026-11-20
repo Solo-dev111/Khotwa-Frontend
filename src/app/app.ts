@@ -16,6 +16,8 @@ export class App {
   auth = inject(AuthService);
   menuOpen = signal(false);
 
+  backToTop(): void { window.scrollTo({ top: 0, behavior: 'auto' }); }
+
   toggleMenu(): void {
     this.menuOpen.update(open => !open);
   }

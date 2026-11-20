@@ -6,6 +6,7 @@
         <span class="brand-mark" aria-hidden="true">.</span>
       </a>
 
+      @if (auth.currentUser()) {
       <button
         type="button"
         class="menu-toggle"
@@ -21,14 +22,9 @@
           }
         </svg>
       </button>
+      }
 
       <nav class="primary-nav" [class.is-open]="menuOpen()" [attr.aria-label]="language.text('courses')">
-        @if (auth.currentUser()?.role !== 'Admin') {
-          <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
-            {{ language.text('courses') }}
-          </a>
-        }
-
         @if (auth.currentUser()?.role === 'Student') {
           <a routerLink="/favorites" routerLinkActive="is-active" (click)="closeMenu()">{{ language.current() === 'ar' ? 'المفضلة' : 'Favorites' }}</a>
           <a routerLink="/my-courses" routerLinkActive="is-active" (click)="closeMenu()">
@@ -95,14 +91,42 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <a routerLink="/" class="footer-brand" (click)="closeMenu()">
-        {{ language.text('brand') }}<span>.</span>
-      </a>
-      <p>{{ language.text('footer') }}</p>
-      <a routerLink="/" fragment="catalog" class="footer-link">
-        {{ language.text('courses') }}
-        <span aria-hidden="true">↗</span>
-      </a>
+      <div class="footer-grid">
+        <div class="footer-intro">
+          <a routerLink="/" class="footer-brand">{{ language.text('brand') }}<span>.</span></a>
+          <p>{{ language.current() === 'ar' ? 'خطوتك الأولى نحو مستقبل أفضل. تعلّم مهارات جديدة وطوّر قدراتك على طريقتك.' : 'Your first step toward a better future. Learn new skills and grow at your own pace.' }}</p>
+        </div>
+        <div class="footer-group">
+          <h2>{{ language.current() === 'ar' ? 'المنصة' : 'Platform' }}</h2>
+          <a routerLink="/">{{ language.current() === 'ar' ? 'الصفحة الرئيسية' : 'Home' }}</a>
+          <a routerLink="/about">{{ language.current() === 'ar' ? 'من نحن' : 'About us' }}</a>
+          <a routerLink="/" fragment="catalog">{{ language.current() === 'ar' ? 'استكشف الدورات' : 'Explore courses' }}</a>
+        </div>
+        <div class="footer-group">
+          <h2>{{ language.current() === 'ar' ? 'حسابك' : 'Your account' }}</h2>
+          @if (!auth.currentUser()) {
+            <a routerLink="/login">{{ language.text('login') }}</a>
+            <a routerLink="/register">{{ language.text('register') }}</a>
+          } @else if (auth.currentUser()?.role === 'Student') {
+            <a routerLink="/my-courses">{{ language.current() === 'ar' ? 'دوراتي' : 'My courses' }}</a>
+            <a routerLink="/favorites">{{ language.current() === 'ar' ? 'المفضلة' : 'Favorites' }}</a>
+          } @else if (auth.currentUser()?.role === 'Instructor') {
+            <a routerLink="/instructor/courses">{{ language.current() === 'ar' ? 'إدارة دوراتي' : 'Manage my courses' }}</a>
+          } @else {
+            <a routerLink="/admin/users">{{ language.current() === 'ar' ? 'إدارة المستخدمين' : 'Manage users' }}</a>
+            <a routerLink="/admin/courses">{{ language.current() === 'ar' ? 'إدارة الدورات' : 'Manage courses' }}</a>
+          }
+        </div>
+        <div class="footer-group">
+          <h2>{{ language.current() === 'ar' ? 'المساعدة' : 'Help' }}</h2>
+          <a routerLink="/help">{{ language.current() === 'ar' ? 'الأسئلة الشائعة' : 'Frequently asked questions' }}</a>
+          <a routerLink="/help" fragment="getting-started">{{ language.current() === 'ar' ? 'كيف تبدأ؟' : 'Getting started' }}</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>{{ language.current() === 'ar' ? '© 2026 خطوة. جميع الحقوق محفوظة.' : '© 2026 Khotwa. All rights reserved.' }}</p>
+        <button class="footer-top" type="button" (click)="backToTop()">{{ language.current() === 'ar' ? 'العودة للأعلى' : 'Back to top' }} ↑</button>
+      </div>
     </div>
   </footer>
 </div>

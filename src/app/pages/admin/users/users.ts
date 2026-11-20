@@ -3,7 +3,9 @@ import {
   Component,
   inject,
   signal,
-  afterNextRender
+  afterNextRender,
+  Injector,
+  ElementRef
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
@@ -30,6 +32,22 @@ import { LanguageService } from '../../../core/services/language.service';
 export class Users {
 
   private service = inject(UserService);
+  private injector = inject(Injector);
+  private host = inject(ElementRef<HTMLElement>);
+  deleteTarget = signal<AdminUser | null>(null);
+  deleteBlocked = signal(false);
+  dependencies = signal<{courses:number; enrollments:number; orders:number; reviews:number} | null>(null);
+  deleteError = signal('');
+
+  private reveal(selector: string, focus = false): void {
+    afterNextRender(() => {
+      const node = this.host.nativeElement.querySelector<HTMLElement>(selector);
+      if (!node) return;
+      node.scrollIntoView({ block: 'start', behavior: 'auto' });
+      if (focus) node.focus({ preventScroll: true });
+    }, { injector: this.injector });
+  }
+
 
   auth = inject(AuthService);
   language = inject(LanguageService);
@@ -112,8 +130,6 @@ export class Users {
     if (!this.isAdmin()) return;
 
     this.loading.set(true);
-    this.error.set('');
-
     this.service.getAll(
       this.search,
       this.roleFilter || null,
@@ -160,6 +176,7 @@ export class Users {
     this.error.set('');
     this.message.set('');
     this.formOpen.set(true);
+    this.reveal('#fullName', true);
   }
 
   // EDIT USER FORM
@@ -176,6 +193,7 @@ export class Users {
     this.error.set('');
     this.message.set('');
     this.formOpen.set(true);
+    this.reveal('#fullName', true);
   }
 
   closeForm(): void {
@@ -245,6 +263,7 @@ export class Users {
 
         this.pageNumber = 1;
         this.loadUsers();
+        this.reveal('.alert.success', true);
       },
 
       error: (err: HttpErrorResponse) => {
@@ -256,47 +275,53 @@ export class Users {
 
   // DELETE USER
   remove(user: AdminUser): void {
-    if (
-      !this.isAdmin() ||
-      this.isSelf(user) ||
-      this.deletingId() !== null
-    ) {
-      return;
-    }
+    if (!this.isAdmin() || this.isSelf(user) || this.deletingId() !== null) return;
+    this.deleteTarget.set(user);
+    this.deleteBlocked.set(false);
+    this.dependencies.set(null);
+    this.deleteError.set('');
+    afterNextRender(() => {
+      this.host.nativeElement.querySelector<HTMLDialogElement>('#user-delete-dialog')?.showModal();
+    }, { injector: this.injector });
+  }
 
-    const confirmed = confirm(this.t(
-      `هل تريد حذف حساب "${user.fullName}"؟`,
-      `Delete the account "${user.fullName}"?`
-    ));
+  closeDelete(): void {
+    if (this.deletingId() !== null) return;
+    this.host.nativeElement.querySelector<HTMLDialogElement>('#user-delete-dialog')?.close();
+    this.deleteTarget.set(null);
+  }
 
-    if (!confirmed) return;
-
+  confirmDelete(): void {
+    const user = this.deleteTarget();
+    if (!user || this.isSelf(user) || this.deleteBlocked() || this.deletingId() !== null) return;
     this.error.set('');
     this.message.set('');
+    this.deleteError.set('');
     this.deletingId.set(user.id);
-
     this.service.delete(user.id).subscribe({
       next: () => {
         this.deletingId.set(null);
-
-        this.message.set(this.t(
-          'تم حذف الحساب بنجاح.',
-          'User deleted successfully.'
-        ));
-
-        if (
-          this.users().length === 1 &&
-          this.pageNumber > 1
-        ) {
-          this.pageNumber--;
-        }
-
+        this.closeDelete();
+        if (this.editingId === user.id) this.closeForm();
+        this.message.set(this.t('تم حذف الحساب بنجاح.', 'User deleted successfully.'));
+        if (this.users().length === 1 && this.pageNumber > 1) this.pageNumber--;
         this.loadUsers();
+        this.reveal('.alert.success', true);
       },
-
       error: (err: HttpErrorResponse) => {
         this.deletingId.set(null);
-        this.showError(err);
+        if (err.status === 409) {
+          this.deleteBlocked.set(true);
+          const body = err.error;
+          if (body?.code === 'USER_HAS_RELATED_RECORDS' && body.dependencies) {
+            this.dependencies.set(body.dependencies);
+            this.deleteError.set(this.t('لا يمكن حذف الحساب لارتباطه بسجلات محفوظة في النظام.', 'This account cannot be deleted because it has protected records.'));
+          } else {
+            this.deleteError.set(this.t('لا يمكن حذف الحساب بسبب وجود تعارض أو سجلات مرتبطة به.', 'Cannot delete the account because of a conflict or related records.'));
+          }
+        } else {
+          this.deleteError.set(err.status === 404 ? this.t('الحساب غير موجود.', 'Account not found.') : this.t('تعذر حذف الحساب. أعد المحاولة.', 'Could not delete the account. Try again.'));
+        }
       }
     });
   }
@@ -314,6 +339,7 @@ export class Users {
 
   private showError(err: HttpErrorResponse): void {
     console.error('Admin Users API:', err);
+    this.reveal('.alert.error', true);
 
     if (err.status === 401) {
       this.error.set(this.t(
@@ -326,10 +352,12 @@ export class Users {
         'You do not have permission to manage users.'
       ));
     } else if (err.status === 409) {
-      this.error.set(this.t(
-        'يوجد تعارض: ربما البريد مستخدم، أو الحساب مرتبط بسجلات لا تسمح بتعديله أو حذفه.',
-        'Conflict: Email may already exist, or the account has related records.'
-      ));
+      const reason = typeof err.error === 'string' ? err.error : err.error?.message;
+      this.error.set(reason === 'Email already exists'
+        ? this.t('البريد الإلكتروني مستخدم بالفعل.', 'Email already exists.')
+        : reason === 'Cannot change your own role'
+          ? this.t('لا يمكنك تغيير دور حسابك الحالي.', 'You cannot change your own role.')
+          : this.t('لا يمكن تغيير الدور لوجود سجلات مرتبطة بالحساب.', 'The role cannot be changed because the account has related records.'));
     } else if (err.status === 400) {
       this.error.set(this.t(
         'البيانات غير صحيحة أو العملية غير مسموحة.',

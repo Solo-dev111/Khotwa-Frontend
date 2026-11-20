@@ -34,13 +34,13 @@
   } @else {
     <!-- FEEDBACK -->
     @if (error()) {
-      <div class="alert error">
+      <div class="alert error" role="alert" tabindex="-1">
         {{ error() }}
       </div>
     }
 
     @if (message()) {
-      <div class="alert success">
+      <div class="alert success" role="status" tabindex="-1">
         {{ message() }}
       </div>
     }
@@ -232,14 +232,15 @@
 
                   <td>
                     <div class="row-actions">
-                      <button type="button" class="secondary-button" (click)="openEdit(user)">
+                      <button type="button" class="secondary-button" (click)="openEdit(user)" [disabled]="saving() || deletingId() !== null">
                         {{ t('تعديل', 'Edit') }}
                       </button>
 
                       <button
                         type="button"
                         class="delete-button"
-                        [disabled]="isSelf(user) || deletingId() !== null"
+                        [disabled]="isSelf(user) || deletingId() !== null || saving()"
+                        [title]="isSelf(user) ? t('لا يمكنك حذف حسابك الحالي', 'You cannot delete your own account') : t('حذف الحساب', 'Delete account')"
                         (click)="remove(user)"
                       >
                         {{
@@ -281,3 +282,30 @@
     </section>
   }
 </section>
+
+@if (deleteTarget(); as user) {
+  <dialog id="user-delete-dialog" class="user-delete-dialog" aria-labelledby="user-delete-title" (cancel)="$event.preventDefault(); closeDelete()">
+    <h2 id="user-delete-title">{{ deleteBlocked() ? t('تعذر حذف المستخدم','Cannot delete user') : t('حذف المستخدم','Delete user') }}</h2>
+    <p class="delete-name">{{ user.fullName }} · <span dir="ltr">{{ user.email }}</span></p>
+    @if (deleteError()) {
+      <p class="alert error" role="alert">{{ deleteError() }}</p>
+      @if (dependencies(); as d) {
+        <ul class="dependency-list">
+          @if (d.courses > 0) { <li>{{ t('الدورات التي يديرها','Courses taught') }}: <strong>{{ d.courses }}</strong></li> }
+          @if (d.enrollments > 0) { <li>{{ t('التسجيلات في الدورات','Course enrollments') }}: <strong>{{ d.enrollments }}</strong></li> }
+          @if (d.orders > 0) { <li>{{ t('الطلبات','Orders') }}: <strong>{{ d.orders }}</strong></li> }
+          @if (d.reviews > 0) { <li>{{ t('التقييمات','Reviews') }}: <strong>{{ d.reviews }}</strong></li> }
+        </ul>
+        <p>{{ d.courses > 0 ? t('يمكنك نقل الدورات إلى مدرب آخر من إدارة الدورات.','You can transfer courses to another instructor in course management.') : t('يتم الاحتفاظ بهذه السجلات لحماية بيانات التعلم والطلبات.','These records are kept to protect learning and order history.') }}</p>
+      }
+    } @else {
+      <p>{{ t('هل تريد حذف هذا الحساب نهائياً؟ لن يتم حذف الحساب إذا كان مرتبطاً بسجلات محمية.','Delete this account permanently? Accounts with protected records will not be deleted.') }}</p>
+    }
+    <div class="dialog-actions">
+      <button type="button" class="secondary-button" autofocus (click)="closeDelete()" [disabled]="deletingId() !== null">{{ deleteBlocked() ? t('فهمت','OK') : t('إلغاء','Cancel') }}</button>
+      @if (!deleteBlocked()) {
+        <button type="button" class="confirm-user-delete" (click)="confirmDelete()" [disabled]="deletingId() !== null">{{ deletingId() !== null ? t('جاري الحذف...','Deleting...') : t('تأكيد الحذف','Confirm deletion') }}</button>
+      }
+    </div>
+  </dialog>
+}

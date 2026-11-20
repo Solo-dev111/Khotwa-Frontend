@@ -38,6 +38,9 @@ export const routes: Routes = [
     title: 'Khotwa - Register'
   },
 
+  { path: 'about', loadComponent: () => import('./pages/info/info').then(m => m.Info), data: { page: 'about' }, title: 'Khotwa - About' },
+  { path: 'help', loadComponent: () => import('./pages/info/info').then(m => m.Info), data: { page: 'help' }, title: 'Khotwa - Help' },
+
   // ADMIN
   {
     path: 'admin/categories',
