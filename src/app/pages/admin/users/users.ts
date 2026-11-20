@@ -33,7 +33,7 @@ export class Users {
 
   private service = inject(UserService);
   private injector = inject(Injector);
-  private host = inject(ElementRef<HTMLElement>);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
   deleteTarget = signal<AdminUser | null>(null);
   deleteBlocked = signal(false);
   dependencies = signal<{courses:number; enrollments:number; orders:number; reviews:number} | null>(null);
