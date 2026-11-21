@@ -95,6 +95,7 @@
 /* COURSE FORM */
 
 .editor-panel {
+  scroll-margin-top: 24px;
   border-color: #cbd5c9;
 }
 
