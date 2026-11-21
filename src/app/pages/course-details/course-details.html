@@ -169,7 +169,11 @@
               </p>
             }
             @if (enrolled()) {
-              <button class="purchase-button" type="button" [disabled]="completing() || !!progress()?.completedLessonIds?.includes(lesson.id)" (click)="completeLesson(lesson.id)">{{ progress()?.completedLessonIds?.includes(lesson.id) ? t('تم إكمال الدرس','Lesson completed') : t('إكمال الدرس','Mark complete') }}</button>
+              <button class="purchase-button lesson-complete-button" type="button"
+                [class.is-completed]="!!progress()?.completedLessonIds?.includes(lesson.id)"
+                [disabled]="completing() || !!progress()?.completedLessonIds?.includes(lesson.id)"
+                (click)="completeLesson(lesson.id)"
+                aria-live="polite">{{ progress()?.completedLessonIds?.includes(lesson.id) ? t('✓ تم إكمال الدرس', '✓ Lesson completed') : t('إكمال الدرس', 'Mark complete') }}</button>
             }
           </section>
         }
