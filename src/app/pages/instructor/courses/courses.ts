@@ -4,7 +4,9 @@ import {
   Component,
   inject,
   signal,
-  afterNextRender
+  afterNextRender,
+  ElementRef,
+  Injector
 } from '@angular/core';
 
 import { CourseImagePicker, isCourseImageUrlValid } from '../../../shared/course-image-picker/course-image-picker';
@@ -35,6 +37,8 @@ export class Courses {
   private service = inject(InstructorCourseService);
   private courseService = inject(CourseService);
   private router = inject(Router);
+  private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
 
   language = inject(LanguageService);
@@ -77,6 +81,13 @@ export class Courses {
     course.id,
     'lessons'
     ]);
+  }
+
+  private scrollToEditor(): void {
+    afterNextRender(() => {
+      this.host.nativeElement.querySelector<HTMLElement>('.editor-panel')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, { injector: this.injector });
   }
 
   t(ar: string, en: string): string {
@@ -186,6 +197,7 @@ export class Courses {
     this.error.set('');
     this.message.set('');
     this.formOpen.set(true);
+    this.scrollToEditor();
   }
 
   // CLOSE FORM

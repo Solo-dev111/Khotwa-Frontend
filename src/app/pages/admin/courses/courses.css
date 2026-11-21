@@ -51,6 +51,7 @@
 }
 
 .editor-panel {
+  scroll-margin-top: 24px;
   border-color: #cbd6c8;
 }
 
